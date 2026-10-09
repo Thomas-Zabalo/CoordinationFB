@@ -262,6 +262,7 @@ Ouvrir une PR vers main.
 Fusionner la PR après validation.
 Supprimer la branche de développement.
 
+```mermaid
 gitGraph
     commit id: "v1.0.0" tag: "Prod"
     
@@ -296,6 +297,7 @@ gitGraph
     %% Déploiement du fix en Prod
     checkout main
     merge fix/LIN-102 id: "PR vers main (Prod)" tag: "v1.1.1"
+```
 
 ## Pull requests
 

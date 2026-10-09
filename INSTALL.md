@@ -47,6 +47,8 @@ cp frontend/.env.example frontend/.env
 
 ## 4. Initialiser la base de données
 
+L'API crée automatiquement la base et ses tables au démarrage. Pour les créer sans lancer le serveur :
+
 ```bash
 cd backend
 npm run db:init
@@ -97,6 +99,6 @@ Les tests du backend utilisent une base SQLite en mémoire : ils ne touchent pas
 | `EADDRINUSE` | Fermer le processus qui utilise le port, ou changer `PORT` dans `backend/.env` |
 | Erreur `CORS` dans le navigateur | Vérifier que `CORS_ORIGIN` dans `backend/.env` correspond à l'adresse du front-end |
 | `Network Error` côté front | Démarrer l'API et vérifier `VITE_API_URL` dans `frontend/.env` |
-| `no such table: vinyles` | Lancer `npm run db:init` dans `backend` |
+| `no such table: vinyles` | Redémarrer l'API, ou lancer `npm run db:init` dans `backend` |
 
 Après toute modification d'un fichier `.env`, redémarrer le serveur concerné.

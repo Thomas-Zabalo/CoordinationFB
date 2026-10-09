@@ -219,26 +219,83 @@ La branche `main` doit toujours rester stable. On ne pousse jamais directement d
 
 ## Convention de commits
 
-Nous suivons [Conventional Commits](https://www.conventionalcommits.org/fr/) :
+Stratégie de gestion des branches Git
+1. Branches permanentes
+main : Branche de déploiement en production. Elle doit toujours contenir un code stable et prêt à être déployé.
+qualif : Branche de qualification (ou pré-production). Elle sert à déployer l'environnement de test afin de valider les tickets avant leur passage en production.
+2. Branches de développement (éphémères)
 
-```
-<type>(<portée>): <description à l'impératif>
-```
+Ces branches sont créées à partir de main et suivent la nomenclature des tickets Linear.
 
-Types acceptés : `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+Types de branches
+feature/<ID-Linear>-nom-court : Pour le développement d'une nouvelle fonctionnalité.
+Exemple : feature/LIN-101-ajout-bouton-login
+fix/<ID-Linear>-nom-court : Pour la correction de bugs.
+Exemple : fix/LIN-102-erreur-404-profil
+conf/<ID-Linear>-nom-court : Pour les modifications de configuration ou d'infrastructure.
+Exemple : conf/LIN-103-update-variables-env
+3. Cycle de vie d'un ticket
+Étape 1 — Création
 
-Portées courantes : `front`, `back`, ou le nom d'une fonctionnalité (`collection`, `envies`, `recherche`…).
+Créer une branche de travail (feature/, fix/ ou conf/) toujours à partir de main.
 
-Exemples :
+Étape 2 — Développement
 
-```
-feat(front): ajouter le filtre par genre musical
-fix(back): corriger la recherche par numéro de catalogue
-docs: expliquer le fonctionnement de la liste d'envies
-test(collection): couvrir le calcul de la valeur estimée
-```
+Effectuer les commits nécessaires sur la branche de travail dédiée au ticket.
 
-Référencez l'issue Linear concernée dans le corps du commit ou de la PR (`Fixes CFB-12`).
+Étape 3 — Qualification
+
+Ouvrir une Pull Request (PR) ou fusionner la branche de travail vers qualif afin que la fonctionnalité soit testée sur l'environnement de staging.
+
+Étape 4 — Mise en production
+
+Une fois la QA validée sur qualif, ouvrir une PR de la branche de travail directement vers main.
+
+Après la fusion dans main, la branche de développement peut être supprimée.
+
+4. Récapitulatif du workflow
+Créer une branche depuis main.
+Développer et committer les modifications sur cette branche.
+Déployer et tester les modifications sur qualif.
+Valider la QA.
+Ouvrir une PR vers main.
+Fusionner la PR après validation.
+Supprimer la branche de développement.
+
+gitGraph
+    commit id: "v1.0.0" tag: "Prod"
+    
+    branch qualif
+    checkout qualif
+    commit id: "sync qualif"
+    
+    %% Développement d'une Feature
+    checkout main
+    branch feature/LIN-101
+    checkout feature/LIN-101
+    commit id: "dev feature A"
+    commit id: "dev feature B"
+    
+    %% Déploiement en Qualif pour test
+    checkout qualif
+    merge feature/LIN-101 id: "PR vers qualif (Tests)"
+    
+    %% Validation et Déploiement en Prod
+    checkout main
+    merge feature/LIN-101 id: "PR vers main (Prod)" tag: "v1.1.0"
+    
+    %% Développement d'un Hotfix ou Fix
+    branch fix/LIN-102
+    checkout fix/LIN-102
+    commit id: "correction bug"
+    
+    %% Test du fix en qualif
+    checkout qualif
+    merge fix/LIN-102 id: "PR vers qualif (Tests fix)"
+    
+    %% Déploiement du fix en Prod
+    checkout main
+    merge fix/LIN-102 id: "PR vers main (Prod)" tag: "v1.1.1"
 
 ## Pull requests
 
@@ -304,4 +361,4 @@ Ces règles s'appuient sur des méthodes reconnues d'organisation et de communic
 
 ---
 
-Merci pour votre contribution ! 🎶
+Merci pour votre contribution !

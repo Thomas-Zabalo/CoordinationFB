@@ -264,39 +264,26 @@ Supprimer la branche de développement.
 
 ```mermaid
 gitGraph
-    commit id: "v1.0.0" tag: "Prod"
-    
-    branch qualif
-    checkout qualif
-    commit id: "sync qualif"
-    
-    %% Développement d'une Feature
-    checkout main
-    branch feature/LIN-101
-    checkout feature/LIN-101
-    commit id: "dev feature A"
-    commit id: "dev feature B"
-    
-    %% Déploiement en Qualif pour test
-    checkout qualif
-    merge feature/LIN-101 id: "PR vers qualif (Tests)"
-    
-    %% Validation et Déploiement en Prod
-    checkout main
-    merge feature/LIN-101 id: "PR vers main (Prod)" tag: "v1.1.0"
-    
-    %% Développement d'un Hotfix ou Fix
-    branch fix/LIN-102
-    checkout fix/LIN-102
-    commit id: "correction bug"
-    
-    %% Test du fix en qualif
-    checkout qualif
-    merge fix/LIN-102 id: "PR vers qualif (Tests fix)"
-    
-    %% Déploiement du fix en Prod
-    checkout main
-    merge fix/LIN-102 id: "PR vers main (Prod)" tag: "v1.1.1"
+   commit id: "prod stable"
+   branch qualif
+   checkout main
+   branch "feature/LIN-101-ajout-bouton-login"
+   commit id: "LIN-101 : bouton"
+   commit id: "LIN-101 : tests"
+   checkout main
+   branch "fix/LIN-102-erreur-404-profil"
+   commit id: "LIN-102 : correctif"
+   checkout main
+   branch "conf/LIN-103-update-variables-env"
+   commit id: "LIN-103 : variables"
+   checkout qualif
+   merge "feature/LIN-101-ajout-bouton-login" id: "qualif LIN-101"
+   merge "fix/LIN-102-erreur-404-profil" id: "qualif LIN-102"
+   merge "conf/LIN-103-update-variables-env" id: "qualif LIN-103"
+   checkout main
+   merge "fix/LIN-102-erreur-404-profil" id: "prod LIN-102"
+   merge "feature/LIN-101-ajout-bouton-login" id: "prod LIN-101"
+   merge "conf/LIN-103-update-variables-env" id: "prod LIN-103"
 ```
 
 ## Pull requests

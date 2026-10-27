@@ -2,6 +2,10 @@
 
 > **Objectif du projet :** permettre aux collectionneurs de gérer leurs vinyles au même endroit, simplement et efficacement.
 
+<img width="723" height="404" alt="image" src="https://github.com/user-attachments/assets/8a75a188-0772-4da4-a8bd-600c28b428f9" />
+
+<img width="722" height="404" alt="image" src="https://github.com/user-attachments/assets/a2fbe16a-336e-4e11-8fb8-41df76cb439f" />
+
 ---
 
 ## Sommaire

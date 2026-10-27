@@ -185,4 +185,4 @@ Les organismes regroupent des molécules pour former des sections complètes d'�
 
 <img width="1440" height="1290" alt="Atoms" src="https://github.com/user-attachments/assets/f1b24468-1ede-47bc-807d-e2266542df7f" />
 <img width="1440" height="1024" alt="Molecules" src="https://github.com/user-attachments/assets/4cc1e0a1-b77f-469f-bf10-c8de443e31dc" />
-<img width="1440" height="1666" alt="Organisme" src="https://github.com/user-attachments/assets/264bae05-86fc-469e-af32-b1f108c077ed" />
+<img width="1440" height="1666" alt="Organisme" src="https://github.com/user-attachments/assets/b580e8ed-0690-480e-a562-35f44b0eaee2" />

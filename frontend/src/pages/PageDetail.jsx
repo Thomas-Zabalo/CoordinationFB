@@ -36,10 +36,10 @@ export default function PageDetail() {
   const [erreurAction, setErreurAction] = useState(null);
 
   if (chargement) return <p className="text-secondary">Chargement…</p>;
-  if (erreur) {
+  if (erreur || !vinyle || !LISTES[vinyle.liste]) {
     return (
       <>
-        <MessageErreur erreur={erreur} />
+        <MessageErreur erreur={erreur || 'Vinyle introuvable'} />
         <Link to="/collection">Retour à ma collection</Link>
       </>
     );

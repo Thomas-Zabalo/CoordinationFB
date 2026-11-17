@@ -86,15 +86,17 @@ export default function PageListe({ liste }) {
 
       <MessageErreur erreur={!chargement && resultat.erreur} />
 
-      {chargement && resultat.vinyles.length === 0 && <p className="text-secondary">Chargement…</p>}
+      {chargement && (!Array.isArray(resultat.vinyles) || resultat.vinyles.length === 0) && (
+        <p className="text-secondary">Chargement…</p>
+      )}
 
-      {!chargement && !resultat.erreur && resultat.vinyles.length === 0 && (
+      {!chargement && !resultat.erreur && (!Array.isArray(resultat.vinyles) || resultat.vinyles.length === 0) && (
         <div className="alert alert-info">
           {filtresActifs ? 'Aucun vinyle ne correspond à votre recherche.' : MESSAGES_LISTE_VIDE[liste]}
         </div>
       )}
 
-      {resultat.vinyles.length > 0 && (
+      {Array.isArray(resultat.vinyles) && resultat.vinyles.length > 0 && (
         <div aria-busy={chargement}>
           <TableauVinyles vinyles={resultat.vinyles} />
         </div>

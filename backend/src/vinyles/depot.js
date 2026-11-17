@@ -1,3 +1,5 @@
+import { ErreurApi } from '../erreurs.js';
+
 // Correspondance entre les noms de l'API (partagés avec le front) et les colonnes SQL.
 const COLONNES = {
   artiste: 'artiste',
@@ -20,10 +22,14 @@ const CHAMPS_RECHERCHES = ['artiste', 'titre', 'label', 'numeroCatalogue', 'genr
 
 const collateur = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
 
+const MAX_VINYLES = 2000;
+const MAX_RESULTATS = 500;
+
 // Recherche, filtre par genre et tri se font en JS plutôt qu'en SQL : SQLite
 // ne sait comparer sans tenir compte de la casse et des accents qu'en ASCII.
 function normaliser(texte) {
-  return texte.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  if (typeof texte !== 'string') return '';
+  return texte.slice(0, 200).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 }
 
 function comparerValeurs(a, b) {
@@ -77,6 +83,7 @@ export function creerDepotVinyles(db) {
   );
   const requeteParId = db.prepare('SELECT * FROM vinyles WHERE id = ?');
   const requeteSuppression = db.prepare('DELETE FROM vinyles WHERE id = ?');
+  const requeteCompter = db.prepare('SELECT COUNT(*) AS total FROM vinyles');
   const requeteGenres = db.prepare(
     `SELECT genre FROM vinyles
      WHERE genre IS NOT NULL AND (@liste IS NULL OR liste = @liste)
@@ -97,7 +104,8 @@ export function creerDepotVinyles(db) {
             !recherche ||
             CHAMPS_RECHERCHES.some((champ) => vinyle[champ] !== null && normaliser(vinyle[champ]).includes(recherche)),
         )
-        .sort(creerComparateur(tri, ordre));
+        .sort(creerComparateur(tri, ordre))
+        .slice(0, MAX_RESULTATS);
     },
 
     trouver(id) {
@@ -105,6 +113,10 @@ export function creerDepotVinyles(db) {
     },
 
     creer(valeurs) {
+      const { total } = requeteCompter.get();
+      if (total >= MAX_VINYLES) {
+        throw new ErreurApi(400, `La collection a atteint sa limite maximale de ${MAX_VINYLES} vinyles.`);
+      }
       const { lastInsertRowid } = requeteInsertion.run(valeurs);
       return this.trouver(lastInsertRowid);
     },

@@ -11,10 +11,10 @@ export default function PageModification() {
   const { vinyle, erreur, chargement } = useVinyle(id);
 
   if (chargement) return <p className="text-secondary">Chargement…</p>;
-  if (erreur) {
+  if (erreur || !vinyle) {
     return (
       <>
-        <MessageErreur erreur={erreur} />
+        <MessageErreur erreur={erreur || 'Vinyle introuvable'} />
         <Link to="/collection">Retour à ma collection</Link>
       </>
     );

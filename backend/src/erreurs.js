@@ -14,6 +14,14 @@ export function erreurIntrouvable(message = 'Ressource introuvable') {
   return new ErreurApi(404, message);
 }
 
+export function erreurTropDeRequetes(message = 'Trop de requêtes, veuillez patienter avant de réessayer.') {
+  return new ErreurApi(429, message);
+}
+
+export function erreurConflit(message = 'Action impossible en raison d’un conflit.') {
+  return new ErreurApi(409, message);
+}
+
 export function routeIntrouvable(req, res, next) {
   next(erreurIntrouvable(`Route introuvable : ${req.method} ${req.originalUrl}`));
 }
@@ -25,8 +33,18 @@ export function gestionnaireErreurs(erreur, req, res, next) {
     return;
   }
 
+  if (erreur.type === 'entity.too.large' || erreur.status === 413) {
+    res.status(413).json({ erreur: { message: 'La taille de la requête dépasse la limite autorisée' } });
+    return;
+  }
+
   if (erreur instanceof ErreurApi) {
     res.status(erreur.statut).json({ erreur: { message: erreur.message, details: erreur.details } });
+    return;
+  }
+
+  if (erreur.code === 'SQLITE_BUSY' || erreur.code === 'SQLITE_LOCKED') {
+    res.status(503).json({ erreur: { message: 'Base de données momentanément occupée, veuillez réessayer' } });
     return;
   }
 

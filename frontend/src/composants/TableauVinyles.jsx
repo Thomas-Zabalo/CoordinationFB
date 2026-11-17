@@ -21,10 +21,10 @@ export default function TableauVinyles({ vinyles }) {
         <tbody>
           {vinyles.map((vinyle) => (
             <tr key={vinyle.id} onClick={() => naviguer(`/vinyles/${vinyle.id}`)}>
-              <td>{vinyle.artiste}</td>
+              <td>{vinyle.artiste || '—'}</td>
               <td>
                 <Link to={`/vinyles/${vinyle.id}`} onClick={(evenement) => evenement.stopPropagation()}>
-                  {vinyle.titre}
+                  {vinyle.titre || 'Sans titre'}
                 </Link>
               </td>
               <td>{vinyle.annee ?? '—'}</td>

@@ -19,6 +19,7 @@ function estVide(valeur) {
 function validerTexte(valeur, longueurMax) {
   if (estVide(valeur)) return { valeur: null };
   if (typeof valeur !== 'string') return { erreur: 'Doit être un texte' };
+  if (valeur.includes('\0')) return { erreur: 'Contient des caractères non autorisés' };
   const texte = valeur.trim();
   if (texte.length > longueurMax) return { erreur: `Ne doit pas dépasser ${longueurMax} caractères` };
   return { valeur: texte };
@@ -26,8 +27,15 @@ function validerTexte(valeur, longueurMax) {
 
 function validerAnnee(valeur) {
   if (estVide(valeur)) return { valeur: null };
-  const annee = Number(valeur);
   const anneeMax = new Date().getFullYear() + 1;
+  if (typeof valeur !== 'number' && typeof valeur !== 'string') {
+    return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
+  }
+  const texte = String(valeur).trim();
+  if (!/^\d{4}$/.test(texte)) {
+    return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
+  }
+  const annee = Number(texte);
   if (!Number.isInteger(annee) || annee < ANNEE_MIN || annee > anneeMax) {
     return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
   }
@@ -70,19 +78,45 @@ export function validerVinyle(corps) {
 }
 
 export function validerRecherche(query) {
+  const donnees = query && typeof query === 'object' ? query : {};
   const erreurs = {};
+
+  let q = null;
+  if (typeof donnees.q === 'string' && donnees.q.trim() !== '') {
+    const texte = donnees.q.trim();
+    if (texte.length > 200) {
+      erreurs.q = 'Ne doit pas dépasser 200 caractères';
+    } else if (texte.includes('\0')) {
+      erreurs.q = 'Caractère non autorisé';
+    } else {
+      q = texte;
+    }
+  }
+
+  let genre = null;
+  if (typeof donnees.genre === 'string' && donnees.genre.trim() !== '') {
+    const texte = donnees.genre.trim();
+    if (texte.length > 200) {
+      erreurs.genre = 'Ne doit pas dépasser 200 caractères';
+    } else if (texte.includes('\0')) {
+      erreurs.genre = 'Caractère non autorisé';
+    } else {
+      genre = texte;
+    }
+  }
+
   const filtres = {
-    q: typeof query.q === 'string' && query.q.trim() !== '' ? query.q.trim() : null,
-    genre: typeof query.genre === 'string' && query.genre.trim() !== '' ? query.genre.trim() : null,
-    tri: query.tri ?? 'dateAjout',
-    ordre: query.ordre ?? (query.tri ? 'asc' : 'desc'),
+    q,
+    genre,
+    tri: typeof donnees.tri === 'string' ? donnees.tri : 'dateAjout',
+    ordre: typeof donnees.ordre === 'string' ? donnees.ordre : (donnees.tri ? 'asc' : 'desc'),
   };
 
   for (const [champ, autorisees] of [
     ['liste', LISTES],
     ['format', FORMATS],
   ]) {
-    const resultat = validerEnumere(query[champ], autorisees);
+    const resultat = validerEnumere(donnees[champ], autorisees);
     if (resultat.erreur) erreurs[champ] = resultat.erreur;
     else filtres[champ] = resultat.valeur;
   }
@@ -94,6 +128,9 @@ export function validerRecherche(query) {
 }
 
 export function validerIdentifiant(valeur) {
-  const id = Number(valeur);
-  return Number.isInteger(id) && id > 0 ? id : null;
+  if (typeof valeur !== 'string' && typeof valeur !== 'number') return null;
+  const texte = String(valeur).trim();
+  if (!/^\d{1,9}$/.test(texte)) return null;
+  const id = Number(texte);
+  return id > 0 && id <= Number.MAX_SAFE_INTEGER ? id : null;
 }

@@ -29,7 +29,7 @@ Cette liste évoluera au fil des sprints, selon les priorités du Product Owner.
 
 ## Installation
 
-Les instructions d'installation et de lancement seront ajoutées ici dès que le code source sera créé.
+Les instructions d'installation sont dans le fichier INSTALL.md
 
 ## Organisation
 

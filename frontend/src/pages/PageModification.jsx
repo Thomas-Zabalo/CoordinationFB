@@ -1,14 +1,23 @@
+import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { modifierVinyle } from '../api/vinyles.js';
 import FormulaireVinyle from '../composants/FormulaireVinyle.jsx';
 import MessageErreur from '../composants/MessageErreur.jsx';
 import MessageSucces from '../composants/MessageSucces.jsx';
+import { useToast } from '../composants/toastContexte.js';
 import { useVinyle } from '../vinyles/useVinyle.js';
 
 export default function PageModification() {
   const { id } = useParams();
   const naviguer = useNavigate();
   const { vinyle, erreur, chargement } = useVinyle(id);
+  const { afficherErreur } = useToast();
+
+  useEffect(() => {
+    if (erreur) {
+      afficherErreur(erreur);
+    }
+  }, [erreur, afficherErreur]);
 
   if (chargement) return <p className="text-secondary">Chargement…</p>;
   if (erreur || !vinyle) {

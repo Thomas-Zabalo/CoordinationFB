@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import EnTete from './composants/EnTete.jsx';
+import ToastConteneur from './composants/ToastConteneur.jsx';
+import ToastProvider from './composants/ToastProvider.jsx';
 import PageAjout from './pages/PageAjout.jsx';
 import PageDetail from './pages/PageDetail.jsx';
 import PageIntrouvable from './pages/PageIntrouvable.jsx';
@@ -8,8 +10,9 @@ import PageModification from './pages/PageModification.jsx';
 
 export default function App() {
   return (
-    <>
+    <ToastProvider>
       <EnTete />
+      <ToastConteneur />
       <main className="container contenu">
         <Routes>
           <Route path="/" element={<Navigate to="/collection" replace />} />
@@ -22,6 +25,6 @@ export default function App() {
           <Route path="*" element={<PageIntrouvable />} />
         </Routes>
       </main>
-    </>
+    </ToastProvider>
   );
 }

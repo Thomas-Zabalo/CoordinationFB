@@ -1,0 +1,23 @@
+# ============================================================
+# CD – Développement
+# Déclenché sur push vers la branche `dev`
+# ============================================================
+name: CD – Développement
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy-dev:
+    name: Déployer en développement
+    uses: ./.github/workflows/cd-deploy.yml
+    with:
+      environment: development
+      api_url: http://localhost:3000
+    secrets:
+      deploy_host:    ${{ secrets.DEPLOY_HOST_DEV }}
+      deploy_user:    ${{ secrets.DEPLOY_USER }}
+      deploy_ssh_key: ${{ secrets.DEPLOY_SSH_KEY }}
+      deploy_path:    ${{ secrets.DEPLOY_PATH }}

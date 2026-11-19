@@ -1,0 +1,23 @@
+# ============================================================
+# CD – Production
+# Déclenché sur push vers `main` (merge d'une PR uniquement)
+# ============================================================
+name: CD – Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-prod:
+    name: Déployer en production
+    uses: ./.github/workflows/cd-deploy.yml
+    with:
+      environment: production
+      api_url: ${{ vars.VITE_API_URL }}
+    secrets:
+      deploy_host:    ${{ secrets.DEPLOY_HOST_PROD }}
+      deploy_user:    ${{ secrets.DEPLOY_USER }}
+      deploy_ssh_key: ${{ secrets.DEPLOY_SSH_KEY }}
+      deploy_path:    ${{ secrets.DEPLOY_PATH }}

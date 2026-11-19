@@ -10,6 +10,14 @@ export function erreurValidation(details) {
   return new ErreurApi(400, 'Certains champs sont invalides', details);
 }
 
+export function erreurNonAutorise(message = 'Authentification requise') {
+  return new ErreurApi(401, message);
+}
+
+export function erreurInterdit(message = 'Accès interdit') {
+  return new ErreurApi(403, message);
+}
+
 export function erreurIntrouvable(message = 'Ressource introuvable') {
   return new ErreurApi(404, message);
 }

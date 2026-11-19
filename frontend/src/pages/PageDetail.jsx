@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { modifierVinyle, supprimerVinyle } from '../api/vinyles.js';
 import BadgeEtat from '../composants/BadgeEtat.jsx';
 import MessageErreur from '../composants/MessageErreur.jsx';
 import MessageSucces from '../composants/MessageSucces.jsx';
+import { useToast } from '../composants/toastContexte.js';
 import { LISTES, trouverEtat } from '../vinyles/constantes.js';
 import { useVinyle } from '../vinyles/useVinyle.js';
 
@@ -34,6 +35,13 @@ export default function PageDetail() {
   const naviguer = useNavigate();
   const { vinyle, erreur, chargement } = useVinyle(id);
   const [erreurAction, setErreurAction] = useState(null);
+  const { afficherErreur } = useToast();
+
+  useEffect(() => {
+    if (erreur) {
+      afficherErreur(erreur);
+    }
+  }, [erreur, afficherErreur]);
 
   if (chargement) return <p className="text-secondary">Chargement…</p>;
   if (erreur || !vinyle || !LISTES[vinyle.liste]) {
@@ -54,6 +62,7 @@ export default function PageDetail() {
       naviguer(liste.chemin, { state: { message: `« ${vinyle.titre} » a été supprimé.` } });
     } catch (erreurSuppression) {
       setErreurAction(erreurSuppression);
+      afficherErreur(erreurSuppression);
     }
   }
 
@@ -65,6 +74,7 @@ export default function PageDetail() {
       });
     } catch (erreurDeplacement) {
       setErreurAction(erreurDeplacement);
+      afficherErreur(erreurDeplacement);
     }
   }
 

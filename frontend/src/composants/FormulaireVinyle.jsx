@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ErreurApi } from '../api/vinyles.js';
 import { ETATS, FORMATS, LISTES, TAILLES } from '../vinyles/constantes.js';
 import MessageErreur from './MessageErreur.jsx';
+import { useToast } from './toastContexte.js';
 
 const CHAMPS = [
   'artiste',
@@ -69,6 +70,7 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
   const [erreurs, setErreurs] = useState({});
   const [erreurGenerale, setErreurGenerale] = useState(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const { afficherErreur } = useToast();
 
   function modifier(champ) {
     return (evenement) => setFormulaire((precedent) => ({ ...precedent, [champ]: evenement.target.value }));
@@ -94,6 +96,7 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
     } catch (erreur) {
       if (erreur instanceof ErreurApi && erreur.statut === 400) setErreurs(erreur.details);
       setErreurGenerale(erreur);
+      afficherErreur(erreur);
       setEnvoiEnCours(false);
     }
   }

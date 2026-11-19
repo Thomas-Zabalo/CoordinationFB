@@ -5,6 +5,7 @@ import BarreFiltres from '../composants/BarreFiltres.jsx';
 import MessageErreur from '../composants/MessageErreur.jsx';
 import MessageSucces from '../composants/MessageSucces.jsx';
 import TableauVinyles from '../composants/TableauVinyles.jsx';
+import { useToast } from '../composants/toastContexte.js';
 import { LISTES } from '../vinyles/constantes.js';
 
 const MESSAGES_LISTE_VIDE = {
@@ -27,6 +28,13 @@ export default function PageListe({ liste }) {
 
   const [resultat, setResultat] = useState({ cle: null, vinyles: [], erreur: null });
   const [genres, setGenres] = useState([]);
+  const { afficherErreur } = useToast();
+
+  useEffect(() => {
+    if (resultat.cle === cle && resultat.erreur) {
+      afficherErreur(resultat.erreur);
+    }
+  }, [resultat, cle, afficherErreur]);
 
   useEffect(() => {
     const controleur = new AbortController();

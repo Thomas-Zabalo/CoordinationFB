@@ -45,15 +45,34 @@ cp frontend/.env.example frontend/.env
 | `backend/.env` | `CORS_ORIGIN` | `http://localhost:5173` | Origine du front-end autorisée par l'API |
 | `frontend/.env` | `VITE_API_URL` | `http://localhost:3000` | Adresse de l'API |
 
-## 4. Initialiser la base de données
+## 4. Initialiser la base de données & Migrations Flyway
 
-L'API crée automatiquement la base et ses tables au démarrage. Pour les créer sans lancer le serveur :
+La structure de la base de données est gérée via **Flyway** (fichiers SQL versionnés dans `backend/src/db/migrations/`).
+L'API applique automatiquement les migrations en attente au démarrage.
+
+Pour exécuter ou inspecter les migrations sans lancer le serveur :
 
 ```bash
 cd backend
-npm run db:init
+
+# Appliquer les migrations en attente (runner Node rapide)
+npm run db:migrate
+
+# Ou via la CLI Flyway
+npm run flyway:migrate
+
+# Consulter l'historique et l'état des migrations
+npm run flyway:info
+
 cd ..
 ```
+
+### Ajouter une nouvelle migration pour l'équipe
+
+1. Créez un nouveau fichier dans `backend/src/db/migrations/` en respectant la convention Flyway :
+   `V2__description_en_minuscules.sql` (ex: `V2__ajouter_champ_vitesse.sql`).
+2. Rédigez le script SQL standard (`ALTER TABLE`, `CREATE TABLE`, `CREATE INDEX`, etc.).
+3. Lancez `npm run db:migrate` (ou redémarrez l'API) : la migration est automatiquement appliquée et historisée dans la table `flyway_schema_history`.
 
 ## 5. Lancer l'application
 

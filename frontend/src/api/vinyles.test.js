@@ -16,7 +16,7 @@ describe('client API des vinyles', () => {
 
     await listerVinyles({ liste: 'envies', q: 'miles davis', genre: '', format: null });
 
-    expect(fetchSimule.mock.calls[0][0]).toBe('http://localhost:3000/vinyles?liste=envies&q=miles+davis');
+    expect(fetchSimule.mock.calls[0][0]).toBe('/api/vinyles?liste=envies&q=miles+davis');
   });
 
   it('envoie le vinyle en JSON lors de la création', async () => {

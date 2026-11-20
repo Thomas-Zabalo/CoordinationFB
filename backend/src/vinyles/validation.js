@@ -1,7 +1,7 @@
 import { ANNEE_MIN, ETATS, FORMATS, LISTES, ORDRES, TAILLES, TRIS } from './constantes.js';
 
-const LONGUEUR_MAX_TEXTE = 200;
-const LONGUEUR_MAX_NOTES = 2000;
+export const LONGUEUR_MAX_TEXTE = 200;
+export const LONGUEUR_MAX_NOTES = 2000;
 
 const CHAMPS_TEXTE = ['artiste', 'titre', 'genre', 'label', 'numeroCatalogue', 'pays', 'couleur'];
 const CHAMPS_OBLIGATOIRES = ['artiste', 'titre'];
@@ -11,6 +11,18 @@ const CHAMPS_ENUMERES = {
   etatDisque: ETATS,
   etatPochette: ETATS,
 };
+
+export const CHAMPS_MODIFIABLES = [
+  ...CHAMPS_TEXTE,
+  ...Object.keys(CHAMPS_ENUMERES),
+  'annee',
+  'notes',
+  'liste',
+];
+
+function estObjetSimple(valeur) {
+  return valeur !== null && typeof valeur === 'object' && !Array.isArray(valeur);
+}
 
 function estVide(valeur) {
   return valeur === undefined || valeur === null || (typeof valeur === 'string' && valeur.trim() === '');
@@ -31,6 +43,9 @@ function validerAnnee(valeur) {
   if (typeof valeur !== 'number' && typeof valeur !== 'string') {
     return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
   }
+  if (typeof valeur === 'number' && !Number.isFinite(valeur)) {
+    return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
+  }
   const texte = String(valeur).trim();
   if (!/^\d{4}$/.test(texte)) {
     return { erreur: `Doit être une année entre ${ANNEE_MIN} et ${anneeMax}` };
@@ -44,28 +59,38 @@ function validerAnnee(valeur) {
 
 function validerEnumere(valeur, valeursAutorisees) {
   if (estVide(valeur)) return { valeur: null };
-  if (!valeursAutorisees.includes(valeur)) {
+  if (typeof valeur !== 'string' || !valeursAutorisees.includes(valeur)) {
     return { erreur: `Doit être l'une des valeurs : ${valeursAutorisees.join(', ')}` };
   }
   return { valeur };
 }
 
+function validerChamp(champ, valeur, { listeObligatoire = false } = {}) {
+  if (CHAMPS_TEXTE.includes(champ)) return validerTexte(valeur, LONGUEUR_MAX_TEXTE);
+  if (Object.hasOwn(CHAMPS_ENUMERES, champ)) return validerEnumere(valeur, CHAMPS_ENUMERES[champ]);
+  if (champ === 'annee') return validerAnnee(valeur);
+  if (champ === 'notes') return validerTexte(valeur, LONGUEUR_MAX_NOTES);
+  if (champ === 'liste') {
+    if (estVide(valeur)) {
+      return listeObligatoire
+        ? { erreur: `Doit être l'une des valeurs : ${LISTES.join(', ')}` }
+        : { valeur: 'collection' };
+    }
+    return validerEnumere(valeur, LISTES);
+  }
+  return { erreur: 'Champ inconnu' };
+}
+
 export function validerVinyle(corps) {
-  const donnees = corps && typeof corps === 'object' ? corps : {};
+  if (!estObjetSimple(corps)) {
+    return { erreurs: { corps: 'Le corps de la requête doit être un objet JSON' } };
+  }
+
   const valeurs = {};
   const erreurs = {};
 
-  const resultats = {
-    ...Object.fromEntries(CHAMPS_TEXTE.map((champ) => [champ, validerTexte(donnees[champ], LONGUEUR_MAX_TEXTE)])),
-    ...Object.fromEntries(
-      Object.entries(CHAMPS_ENUMERES).map(([champ, autorisees]) => [champ, validerEnumere(donnees[champ], autorisees)]),
-    ),
-    annee: validerAnnee(donnees.annee),
-    notes: validerTexte(donnees.notes, LONGUEUR_MAX_NOTES),
-    liste: estVide(donnees.liste) ? { valeur: 'collection' } : validerEnumere(donnees.liste, LISTES),
-  };
-
-  for (const [champ, resultat] of Object.entries(resultats)) {
+  for (const champ of CHAMPS_MODIFIABLES) {
+    const resultat = validerChamp(champ, corps[champ]);
     if (resultat.erreur) erreurs[champ] = resultat.erreur;
     else valeurs[champ] = resultat.valeur;
   }
@@ -77,15 +102,42 @@ export function validerVinyle(corps) {
   return Object.keys(erreurs).length > 0 ? { erreurs } : { valeurs };
 }
 
+export function validerModificationPartielle(corps) {
+  if (!estObjetSimple(corps)) {
+    return { erreurs: { corps: 'Le corps de la requête doit être un objet JSON' } };
+  }
+
+  const champsFournis = CHAMPS_MODIFIABLES.filter((champ) => Object.hasOwn(corps, champ));
+  if (champsFournis.length === 0) {
+    return { erreurs: { corps: 'Au moins un champ modifiable doit être fourni' } };
+  }
+
+  const valeurs = {};
+  const erreurs = {};
+
+  for (const champ of champsFournis) {
+    const resultat = validerChamp(champ, corps[champ], { listeObligatoire: true });
+    if (resultat.erreur) {
+      erreurs[champ] = resultat.erreur;
+    } else if (CHAMPS_OBLIGATOIRES.includes(champ) && resultat.valeur === null) {
+      erreurs[champ] = 'Champ obligatoire';
+    } else {
+      valeurs[champ] = resultat.valeur;
+    }
+  }
+
+  return Object.keys(erreurs).length > 0 ? { erreurs } : { valeurs };
+}
+
 export function validerRecherche(query) {
-  const donnees = query && typeof query === 'object' ? query : {};
+  const donnees = estObjetSimple(query) ? query : {};
   const erreurs = {};
 
   let q = null;
   if (typeof donnees.q === 'string' && donnees.q.trim() !== '') {
     const texte = donnees.q.trim();
-    if (texte.length > 200) {
-      erreurs.q = 'Ne doit pas dépasser 200 caractères';
+    if (texte.length > LONGUEUR_MAX_TEXTE) {
+      erreurs.q = `Ne doit pas dépasser ${LONGUEUR_MAX_TEXTE} caractères`;
     } else if (texte.includes('\0')) {
       erreurs.q = 'Caractère non autorisé';
     } else {
@@ -96,8 +148,8 @@ export function validerRecherche(query) {
   let genre = null;
   if (typeof donnees.genre === 'string' && donnees.genre.trim() !== '') {
     const texte = donnees.genre.trim();
-    if (texte.length > 200) {
-      erreurs.genre = 'Ne doit pas dépasser 200 caractères';
+    if (texte.length > LONGUEUR_MAX_TEXTE) {
+      erreurs.genre = `Ne doit pas dépasser ${LONGUEUR_MAX_TEXTE} caractères`;
     } else if (texte.includes('\0')) {
       erreurs.genre = 'Caractère non autorisé';
     } else {
@@ -125,6 +177,32 @@ export function validerRecherche(query) {
   if (!ORDRES.includes(filtres.ordre)) erreurs.ordre = `Doit être l'une des valeurs : ${ORDRES.join(', ')}`;
 
   return Object.keys(erreurs).length > 0 ? { erreurs } : { filtres };
+}
+
+export function validerTransfert(corps) {
+  const donnees = corps && typeof corps === 'object' ? corps : {};
+  const valeurs = {};
+  const erreurs = {};
+
+  if ('etatDisque' in donnees) {
+    const resultat = validerEnumere(donnees.etatDisque, ETATS);
+    if (resultat.erreur) erreurs.etatDisque = resultat.erreur;
+    else valeurs.etatDisque = resultat.valeur;
+  }
+
+  if ('etatPochette' in donnees) {
+    const resultat = validerEnumere(donnees.etatPochette, ETATS);
+    if (resultat.erreur) erreurs.etatPochette = resultat.erreur;
+    else valeurs.etatPochette = resultat.valeur;
+  }
+
+  if ('notes' in donnees) {
+    const resultat = validerTexte(donnees.notes, LONGUEUR_MAX_NOTES);
+    if (resultat.erreur) erreurs.notes = resultat.erreur;
+    else valeurs.notes = resultat.valeur;
+  }
+
+  return Object.keys(erreurs).length > 0 ? { erreurs } : { valeurs };
 }
 
 export function validerIdentifiant(valeur) {

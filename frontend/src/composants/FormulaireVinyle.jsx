@@ -1,100 +1,121 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ErreurApi } from '../api/vinyles.js';
-import { ETATS, FORMATS, LISTES, TAILLES } from '../vinyles/constantes.js';
+import {
+  ANNEE_MIN,
+  FORMATS,
+  GENRES_SUGGERES,
+  LISTES,
+  LONGUEUR_MAX_NOTES,
+  LONGUEUR_MAX_TEXTE,
+  TAILLES,
+} from '../vinyles/constantes.js';
+import {
+  anneeMaximaleAutorisee,
+  estFormulaireModifie,
+  validerChampVinyle,
+  validerFormulaireVinyle,
+  versFormulaire,
+  versVinyle,
+} from '../vinyles/validation.js';
+import ChampFormulaire from './ChampFormulaire.jsx';
 import MessageErreur from './MessageErreur.jsx';
+import SelecteurEtat from './SelecteurEtat.jsx';
 import { useToast } from './toastContexte.js';
 
-const CHAMPS = [
-  'artiste',
-  'titre',
-  'annee',
-  'genre',
-  'label',
-  'numeroCatalogue',
-  'format',
-  'taille',
-  'pays',
-  'couleur',
-  'etatDisque',
-  'etatPochette',
-  'liste',
-  'notes',
-];
-
-function versFormulaire(vinyle) {
-  return Object.fromEntries(CHAMPS.map((champ) => [champ, vinyle[champ] ?? '']));
+function focaliserPremierChampEnErreur(erreurs) {
+  const premierChamp = Object.keys(erreurs)[0];
+  if (!premierChamp) return;
+  document.getElementById(`vinyle-${premierChamp}`)?.focus();
 }
 
-function versVinyle(formulaire) {
-  const vinyle = Object.fromEntries(
-    Object.entries(formulaire).map(([champ, valeur]) => [champ, valeur.toString().trim() === '' ? null : valeur]),
-  );
-  vinyle.annee = vinyle.annee === null ? null : Number(vinyle.annee);
-  return vinyle;
-}
-
-function Champ({ id, libelle, erreur, obligatoire, children }) {
-  return (
-    <div className={`champ ${erreur ? 'champ--erreur' : ''}`}>
-      <label htmlFor={id}>
-        {libelle}
-        {obligatoire && <span aria-hidden="true"> *</span>}
-      </label>
-      {children}
-      {erreur && (
-        <p className="champ__erreur" id={`${id}-erreur`}>
-          {erreur}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function ChoixEtat({ id, libelle, valeur, erreur, onChange }) {
-  return (
-    <Champ id={id} libelle={libelle} erreur={erreur}>
-      <select id={id} value={valeur} onChange={onChange} aria-invalid={Boolean(erreur)}>
-        <option value="">Non noté</option>
-        {ETATS.map((etat) => (
-          <option key={etat.code} value={etat.code}>
-            {etat.code} ({etat.nom}) : {etat.description}
-          </option>
-        ))}
-      </select>
-    </Champ>
-  );
-}
-
-export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnregistrer, onAnnuler }) {
-  const [formulaire, setFormulaire] = useState(() => versFormulaire(vinyleInitial));
+export default function FormulaireVinyle({
+  vinyleInitial,
+  libelleBouton,
+  onEnregistrer,
+  onAnnuler,
+  mode = 'ajout',
+}) {
+  const etatInitial = useMemo(() => versFormulaire(vinyleInitial), [vinyleInitial]);
+  const [formulaire, setFormulaire] = useState(() => etatInitial);
   const [erreurs, setErreurs] = useState({});
   const [erreurGenerale, setErreurGenerale] = useState(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const { afficherErreur } = useToast();
 
+  const anneeMax = anneeMaximaleAutorisee();
+  const estModifie = estFormulaireModifie(formulaire, etatInitial);
+  const longueurNotes = formulaire.notes.length;
+
   function modifier(champ) {
-    return (evenement) => setFormulaire((precedent) => ({ ...precedent, [champ]: evenement.target.value }));
+    return (evenement) => {
+      const nouvelleValeur = evenement.target.value;
+      setFormulaire((precedent) => ({ ...precedent, [champ]: nouvelleValeur }));
+
+      if (erreurs[champ]) {
+        const erreurChamp = validerChampVinyle(champ, nouvelleValeur, { anneeMax });
+        setErreurs((precedentes) => {
+          const suivantes = { ...precedentes };
+          if (erreurChamp) suivantes[champ] = erreurChamp;
+          else delete suivantes[champ];
+          return suivantes;
+        });
+      }
+    };
   }
 
-  function proprietesTexte(champ) {
+  function validerAuFlou(champ) {
+    return () => {
+      const erreurChamp = validerChampVinyle(champ, formulaire[champ], { anneeMax });
+      setErreurs((precedentes) => {
+        if (!erreurChamp && !precedentes[champ]) return precedentes;
+        const suivantes = { ...precedentes };
+        if (erreurChamp) suivantes[champ] = erreurChamp;
+        else delete suivantes[champ];
+        return suivantes;
+      });
+    };
+  }
+
+  function proprietesChamp(champ, { validerSurBlur = false } = {}) {
     return {
       id: `vinyle-${champ}`,
       value: formulaire[champ],
       onChange: modifier(champ),
+      onBlur: validerSurBlur ? validerAuFlou(champ) : undefined,
       'aria-invalid': Boolean(erreurs[champ]),
       'aria-describedby': erreurs[champ] ? `vinyle-${champ}-erreur` : undefined,
     };
   }
 
+  function reinitialiser() {
+    setFormulaire(etatInitial);
+    setErreurs({});
+    setErreurGenerale(null);
+  }
+
   async function enregistrer(evenement) {
     evenement.preventDefault();
+    if (envoiEnCours) return;
+
+    const validation = validerFormulaireVinyle(formulaire, { anneeMax });
+    if (!validation.valide) {
+      setErreurs(validation.erreurs);
+      setErreurGenerale('Veuillez corriger les champs signalés avant d’enregistrer.');
+      focaliserPremierChampEnErreur(validation.erreurs);
+      return;
+    }
+
     setEnvoiEnCours(true);
     setErreurs({});
     setErreurGenerale(null);
+
     try {
       await onEnregistrer(versVinyle(formulaire));
     } catch (erreur) {
-      if (erreur instanceof ErreurApi && erreur.statut === 400) setErreurs(erreur.details);
+      if (erreur instanceof ErreurApi && erreur.statut === 400 && erreur.details) {
+        setErreurs(erreur.details);
+        focaliserPremierChampEnErreur(erreur.details);
+      }
       setErreurGenerale(erreur);
       afficherErreur(erreur);
       setEnvoiEnCours(false);
@@ -103,6 +124,17 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
 
   return (
     <form className="formulaire card" onSubmit={enregistrer} noValidate>
+      <div className="formulaire__entete">
+        <p className="text-secondary formulaire__legende">
+          Les champs marqués d’un <span className="champ__obligatoire">*</span> sont obligatoires.
+        </p>
+        {mode === 'modification' && estModifie && (
+          <span className="formulaire__statut" role="status">
+            Modifications non enregistrées
+          </span>
+        )}
+      </div>
+
       <MessageErreur erreur={erreurGenerale} />
 
       <fieldset>
@@ -116,8 +148,15 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
                 value={cle}
                 checked={formulaire.liste === cle}
                 onChange={modifier('liste')}
+                aria-label={liste.nomCourt}
+                aria-describedby={`liste-${cle}-description`}
               />
-              {liste.nomCourt}
+              <span className="choix-liste__texte">
+                <span className="choix-liste__titre">{liste.nomCourt}</span>
+                <span id={`liste-${cle}-description`} className="choix-liste__description">
+                  {liste.description}
+                </span>
+              </span>
             </label>
           ))}
         </div>
@@ -126,32 +165,74 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
       <fieldset>
         <legend>Sortie</legend>
         <div className="grille-champs">
-          <Champ id="vinyle-artiste" libelle="Artiste" erreur={erreurs.artiste} obligatoire>
-            <input {...proprietesTexte('artiste')} required maxLength={200} autoComplete="off" />
-          </Champ>
-          <Champ id="vinyle-titre" libelle="Titre" erreur={erreurs.titre} obligatoire>
-            <input {...proprietesTexte('titre')} required maxLength={200} autoComplete="off" />
-          </Champ>
-          <Champ id="vinyle-annee" libelle="Année de sortie" erreur={erreurs.annee}>
-            <input {...proprietesTexte('annee')} type="number" inputMode="numeric" min={1880} />
-          </Champ>
-          <Champ id="vinyle-genre" libelle="Genre" erreur={erreurs.genre}>
-            <input {...proprietesTexte('genre')} maxLength={200} />
-          </Champ>
+          <ChampFormulaire id="vinyle-artiste" libelle="Artiste" erreur={erreurs.artiste} obligatoire>
+            <input
+              {...proprietesChamp('artiste', { validerSurBlur: true })}
+              required
+              maxLength={LONGUEUR_MAX_TEXTE}
+              autoComplete="off"
+              placeholder="ex. Miles Davis"
+            />
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-titre" libelle="Titre" erreur={erreurs.titre} obligatoire>
+            <input
+              {...proprietesChamp('titre', { validerSurBlur: true })}
+              required
+              maxLength={LONGUEUR_MAX_TEXTE}
+              autoComplete="off"
+              placeholder="ex. Kind of Blue"
+            />
+          </ChampFormulaire>
+          <ChampFormulaire
+            id="vinyle-annee"
+            libelle="Année de sortie"
+            erreur={erreurs.annee}
+            aide={`Entre ${ANNEE_MIN} et ${anneeMax}`}
+          >
+            <input
+              {...proprietesChamp('annee', { validerSurBlur: true })}
+              type="number"
+              inputMode="numeric"
+              min={ANNEE_MIN}
+              max={anneeMax}
+              placeholder="ex. 1959"
+            />
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-genre" libelle="Genre" erreur={erreurs.genre}>
+            <input
+              {...proprietesChamp('genre')}
+              list="vinyle-genres-suggeres"
+              maxLength={LONGUEUR_MAX_TEXTE}
+              placeholder="ex. Jazz, Rock, Électro"
+            />
+            <datalist id="vinyle-genres-suggeres">
+              {GENRES_SUGGERES.map((genre) => (
+                <option key={genre} value={genre} />
+              ))}
+            </datalist>
+          </ChampFormulaire>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Pressage</legend>
         <div className="grille-champs">
-          <Champ id="vinyle-label" libelle="Label" erreur={erreurs.label}>
-            <input {...proprietesTexte('label')} maxLength={200} />
-          </Champ>
-          <Champ id="vinyle-numeroCatalogue" libelle="Numéro de catalogue" erreur={erreurs.numeroCatalogue}>
-            <input {...proprietesTexte('numeroCatalogue')} maxLength={200} placeholder="ex. PCS 7027" />
-          </Champ>
-          <Champ id="vinyle-format" libelle="Format" erreur={erreurs.format}>
-            <select {...proprietesTexte('format')}>
+          <ChampFormulaire id="vinyle-label" libelle="Label" erreur={erreurs.label}>
+            <input {...proprietesChamp('label')} maxLength={LONGUEUR_MAX_TEXTE} placeholder="ex. Columbia" />
+          </ChampFormulaire>
+          <ChampFormulaire
+            id="vinyle-numeroCatalogue"
+            libelle="Numéro de catalogue"
+            erreur={erreurs.numeroCatalogue}
+          >
+            <input
+              {...proprietesChamp('numeroCatalogue')}
+              maxLength={LONGUEUR_MAX_TEXTE}
+              placeholder="ex. PCS 7027"
+            />
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-format" libelle="Format" erreur={erreurs.format}>
+            <select {...proprietesChamp('format')}>
               <option value="">Non précisé</option>
               {FORMATS.map((format) => (
                 <option key={format} value={format}>
@@ -159,9 +240,9 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
                 </option>
               ))}
             </select>
-          </Champ>
-          <Champ id="vinyle-taille" libelle="Taille" erreur={erreurs.taille}>
-            <select {...proprietesTexte('taille')}>
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-taille" libelle="Taille" erreur={erreurs.taille}>
+            <select {...proprietesChamp('taille')}>
               <option value="">Non précisée</option>
               {TAILLES.map((taille) => (
                 <option key={taille} value={taille}>
@@ -169,28 +250,36 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
                 </option>
               ))}
             </select>
-          </Champ>
-          <Champ id="vinyle-pays" libelle="Pays" erreur={erreurs.pays}>
-            <input {...proprietesTexte('pays')} maxLength={200} />
-          </Champ>
-          <Champ id="vinyle-couleur" libelle="Couleur du vinyle" erreur={erreurs.couleur}>
-            <input {...proprietesTexte('couleur')} maxLength={200} placeholder="ex. noir, rouge translucide" />
-          </Champ>
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-pays" libelle="Pays" erreur={erreurs.pays}>
+            <input {...proprietesChamp('pays')} maxLength={LONGUEUR_MAX_TEXTE} placeholder="ex. Royaume-Uni" />
+          </ChampFormulaire>
+          <ChampFormulaire id="vinyle-couleur" libelle="Couleur du vinyle" erreur={erreurs.couleur}>
+            <input
+              {...proprietesChamp('couleur')}
+              maxLength={LONGUEUR_MAX_TEXTE}
+              placeholder="ex. noir, rouge translucide"
+            />
+          </ChampFormulaire>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>État</legend>
-        <p className="text-secondary">Le disque et la pochette sont notés séparément.</p>
+        <legend>État (échelle Goldmine)</legend>
+        <p className="text-secondary">
+          {formulaire.liste === 'envies'
+            ? 'Le disque et la pochette sont notés séparément. Facultatif : indiquez l’état minimal recherché.'
+            : 'Le disque et la pochette sont notés séparément selon le standard du marché du disque.'}
+        </p>
         <div className="grille-champs">
-          <ChoixEtat
+          <SelecteurEtat
             id="vinyle-etatDisque"
             libelle="État du disque"
             valeur={formulaire.etatDisque}
             erreur={erreurs.etatDisque}
             onChange={modifier('etatDisque')}
           />
-          <ChoixEtat
+          <SelecteurEtat
             id="vinyle-etatPochette"
             libelle="État de la pochette"
             valeur={formulaire.etatPochette}
@@ -200,15 +289,34 @@ export default function FormulaireVinyle({ vinyleInitial, libelleBouton, onEnreg
         </div>
       </fieldset>
 
-      <Champ id="vinyle-notes" libelle="Notes" erreur={erreurs.notes}>
-        <textarea {...proprietesTexte('notes')} rows={4} maxLength={2000} />
-      </Champ>
+      <ChampFormulaire
+        id="vinyle-notes"
+        libelle="Notes"
+        erreur={erreurs.notes}
+        aide="Particularités du pressage, matrice, lieu ou prix d’achat…"
+        compteur={{
+          texte: `${longueurNotes} / ${LONGUEUR_MAX_NOTES}`,
+          depasse: longueurNotes > LONGUEUR_MAX_NOTES,
+        }}
+      >
+        <textarea {...proprietesChamp('notes')} rows={4} maxLength={LONGUEUR_MAX_NOTES} />
+      </ChampFormulaire>
 
       <div className="actions">
         <button type="submit" className="btn btn-primary" disabled={envoiEnCours}>
           {envoiEnCours ? 'Enregistrement…' : libelleBouton}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={onAnnuler}>
+        {mode === 'modification' && (
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={reinitialiser}
+            disabled={envoiEnCours || !estModifie}
+          >
+            Réinitialiser
+          </button>
+        )}
+        <button type="button" className="btn btn-secondary" onClick={onAnnuler} disabled={envoiEnCours}>
           Annuler
         </button>
       </div>

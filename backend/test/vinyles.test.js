@@ -37,15 +37,37 @@ describe('API /vinyles', () => {
     assert.deepEqual(reponse.body, []);
   });
 
-  it('ajoute un vinyle à la collection par défaut', async () => {
-    const vinyle = await ajouter(abbeyRoad);
+  it('expose aussi les routes sous le préfixe public /api', async () => {
+    const reponse = await request(app).get('/api/vinyles').expect(200);
+    assert.deepEqual(reponse.body, []);
+  });
 
+  it('ajoute un vinyle à la collection par défaut avec en-tête Location', async () => {
+    const reponse = await request(app).post('/vinyles').send(abbeyRoad).expect(201);
+    const vinyle = reponse.body;
+
+    assert.equal(reponse.headers.location, `/vinyles/${vinyle.id}`);
     assert.equal(vinyle.titre, 'Abbey Road');
     assert.equal(vinyle.liste, 'collection');
     assert.equal(vinyle.etatDisque, 'VG+');
     assert.equal(vinyle.etatPochette, 'VG');
     assert.ok(vinyle.id);
     assert.ok(vinyle.dateAjout);
+    assert.ok(vinyle.dateModification);
+  });
+
+  it('nettoie les espaces superflus et ignore les champs système lors de la création', async () => {
+    const vinyle = await ajouter({
+      id: 999,
+      dateAjout: '2000-01-01T00:00:00.000Z',
+      artiste: '  Pink Floyd  ',
+      titre: '  Animals  ',
+    });
+
+    assert.equal(vinyle.id, 1);
+    assert.notEqual(vinyle.dateAjout, '2000-01-01T00:00:00.000Z');
+    assert.equal(vinyle.artiste, 'Pink Floyd');
+    assert.equal(vinyle.titre, 'Animals');
   });
 
   it("refuse un vinyle sans artiste ni titre et détaille les erreurs", async () => {
@@ -69,8 +91,10 @@ describe('API /vinyles', () => {
     assert.ok(reponse.body.erreur.details.annee);
   });
 
-  it('refuse un JSON mal formé', async () => {
+  it('refuse un JSON mal formé ou un tableau JSON', async () => {
     await request(app).post('/vinyles').set('Content-Type', 'application/json').send('{ mal formé').expect(400);
+    const reponseTableau = await request(app).post('/vinyles').send([abbeyRoad]).expect(400);
+    assert.ok(reponseTableau.body.erreur.details.corps);
   });
 
   it('renvoie un vinyle par son identifiant', async () => {
@@ -82,26 +106,150 @@ describe('API /vinyles', () => {
   it('renvoie 404 pour un vinyle inexistant ou un identifiant invalide', async () => {
     await request(app).get('/vinyles/999').expect(404);
     await request(app).get('/vinyles/abc').expect(404);
+    await request(app).put('/vinyles/999').send(abbeyRoad).expect(404);
+    await request(app).put('/vinyles/abc').send(abbeyRoad).expect(404);
+    await request(app).patch('/vinyles/999').send({ etatDisque: 'NM' }).expect(404);
+    await request(app).delete('/vinyles/abc').expect(404);
   });
 
-  it('modifie un vinyle', async () => {
-    const { id } = await ajouter(abbeyRoad);
+  it('modifie un vinyle complètement avec PUT', async () => {
+    const cree = await ajouter(abbeyRoad);
     const reponse = await request(app)
-      .put(`/vinyles/${id}`)
+      .put(`/vinyles/${cree.id}`)
       .send({ ...abbeyRoad, etatPochette: 'NM' })
       .expect(200);
 
     assert.equal(reponse.body.etatPochette, 'NM');
+    assert.equal(reponse.body.dateAjout, cree.dateAjout);
   });
 
-  it("déplace un vinyle de la liste d'envies vers la collection", async () => {
-    const { id } = await ajouter({ artiste: 'Miles Davis', titre: 'Kind of Blue', liste: 'envies' });
+  it('refuse une modification PUT invalide avec les détails par champ', async () => {
+    const { id } = await ajouter(abbeyRoad);
     const reponse = await request(app)
       .put(`/vinyles/${id}`)
-      .send({ artiste: 'Miles Davis', titre: 'Kind of Blue', liste: 'collection' })
+      .send({ ...abbeyRoad, artiste: '', format: 'Cassette' })
+      .expect(400);
+
+    assert.equal(reponse.body.erreur.details.artiste, 'Champ obligatoire');
+    assert.ok(reponse.body.erreur.details.format);
+  });
+
+  it('modifie partiellement un vinyle avec PATCH sans altérer les autres champs', async () => {
+    const cree = await ajouter(abbeyRoad);
+    const reponse = await request(app)
+      .patch(`/vinyles/${cree.id}`)
+      .send({ etatPochette: 'NM', notes: 'Pochette nettoyée' })
       .expect(200);
 
-    assert.equal(reponse.body.liste, 'collection');
+    assert.equal(reponse.body.etatPochette, 'NM');
+    assert.equal(reponse.body.notes, 'Pochette nettoyée');
+    assert.equal(reponse.body.artiste, 'The Beatles');
+    assert.equal(reponse.body.titre, 'Abbey Road');
+    assert.equal(reponse.body.numeroCatalogue, 'PCS 7088');
+    assert.equal(reponse.body.dateAjout, cree.dateAjout);
+  });
+
+  it('refuse un PATCH vide ou tentant de vider un champ obligatoire', async () => {
+    const { id } = await ajouter(abbeyRoad);
+
+    const vide = await request(app).patch(`/vinyles/${id}`).send({}).expect(400);
+    assert.ok(vide.body.erreur.details.corps);
+
+    const titreVide = await request(app).patch(`/vinyles/${id}`).send({ titre: '   ' }).expect(400);
+    assert.equal(titreVide.body.erreur.details.titre, 'Champ obligatoire');
+  });
+
+  it("déplace un vinyle de la liste d'envies vers la collection (PUT et PATCH)", async () => {
+    const premier = await ajouter({ artiste: 'Miles Davis', titre: 'Kind of Blue', liste: 'envies' });
+    const reponsePut = await request(app)
+      .put(`/vinyles/${premier.id}`)
+      .send({ artiste: 'Miles Davis', titre: 'Kind of Blue', liste: 'collection' })
+      .expect(200);
+    assert.equal(reponsePut.body.liste, 'collection');
+
+    const second = await ajouter({ artiste: 'John Coltrane', titre: 'A Love Supreme', liste: 'envies' });
+    const reponsePatch = await request(app)
+      .patch(`/vinyles/${second.id}`)
+      .send({ liste: 'collection', etatDisque: 'NM' })
+      .expect(200);
+    assert.equal(reponsePatch.body.liste, 'collection');
+    assert.equal(reponsePatch.body.etatDisque, 'NM');
+    assert.equal(reponsePatch.body.artiste, 'John Coltrane');
+  });
+
+  describe('transfert souhait vers collection (LIN-49)', () => {
+    it("transfère un souhait vers la collection sans doublon ni perte d'informations", async () => {
+      const souhait = await ajouter({
+        ...abbeyRoad,
+        liste: 'envies',
+        notes: 'Pressage original recherché',
+      });
+
+      const reponse = await request(app).post(`/vinyles/${souhait.id}/transferer`).expect(200);
+
+      assert.equal(reponse.body.id, souhait.id);
+      assert.equal(reponse.body.liste, 'collection');
+      assert.equal(reponse.body.artiste, abbeyRoad.artiste);
+      assert.equal(reponse.body.titre, abbeyRoad.titre);
+      assert.equal(reponse.body.numeroCatalogue, abbeyRoad.numeroCatalogue);
+      assert.equal(reponse.body.etatDisque, abbeyRoad.etatDisque);
+      assert.equal(reponse.body.etatPochette, abbeyRoad.etatPochette);
+      assert.equal(reponse.body.notes, 'Pressage original recherché');
+
+      const envies = await request(app).get('/vinyles?liste=envies').expect(200);
+      assert.deepEqual(envies.body, []);
+
+      const collection = await request(app).get('/vinyles?liste=collection').expect(200);
+      assert.equal(collection.body.length, 1);
+      assert.equal(collection.body[0].id, souhait.id);
+    });
+
+    it("permet de renseigner l'état et les notes lors du transfert sans écraser les autres champs", async () => {
+      const souhait = await ajouter({
+        artiste: 'Miles Davis',
+        titre: 'Kind of Blue',
+        annee: 1959,
+        genre: 'Jazz',
+        label: 'Columbia',
+        liste: 'envies',
+      });
+
+      const reponse = await request(app)
+        .post(`/api/vinyles/${souhait.id}/transferer`)
+        .send({ etatDisque: 'NM', etatPochette: 'VG+', notes: 'Acheté 35 € en brocante' })
+        .expect(200);
+
+      assert.equal(reponse.body.liste, 'collection');
+      assert.equal(reponse.body.etatDisque, 'NM');
+      assert.equal(reponse.body.etatPochette, 'VG+');
+      assert.equal(reponse.body.notes, 'Acheté 35 € en brocante');
+      assert.equal(reponse.body.label, 'Columbia');
+      assert.equal(reponse.body.annee, 1959);
+    });
+
+    it('refuse le transfert si le vinyle fait déjà partie de la collection (409)', async () => {
+      const { id } = await ajouter(abbeyRoad);
+
+      const reponse = await request(app).post(`/vinyles/${id}/transferer`).expect(409);
+      assert.match(reponse.body.erreur.message, /déjà partie de la collection/);
+    });
+
+    it('refuse des états invalides lors du transfert (400)', async () => {
+      const { id } = await ajouter({ artiste: 'Daft Punk', titre: 'Discovery', liste: 'envies' });
+
+      const reponse = await request(app)
+        .post(`/vinyles/${id}/transferer`)
+        .send({ etatDisque: 'Parfait', etatPochette: 'Neuf' })
+        .expect(400);
+
+      assert.ok(reponse.body.erreur.details.etatDisque);
+      assert.ok(reponse.body.erreur.details.etatPochette);
+    });
+
+    it('renvoie 404 pour un souhait inexistant ou un identifiant invalide', async () => {
+      await request(app).post('/vinyles/999/transferer').expect(404);
+      await request(app).post('/vinyles/abc/transferer').expect(404);
+    });
   });
 
   it('supprime un vinyle', async () => {

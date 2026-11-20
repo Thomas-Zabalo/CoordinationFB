@@ -1,4 +1,4 @@
-import { ErreurApi } from '../erreurs.js';
+import { ErreurApi, erreurConflit } from '../erreurs.js';
 
 // Correspondance entre les noms de l'API (partagés avec le front) et les colonnes SQL.
 const COLONNES = {
@@ -22,7 +22,7 @@ const CHAMPS_RECHERCHES = ['artiste', 'titre', 'label', 'numeroCatalogue', 'genr
 
 const collateur = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
 
-const MAX_VINYLES = 2000;
+export const MAX_VINYLES = 2000;
 const MAX_RESULTATS = 500;
 
 // Recherche, filtre par genre et tri se font en JS plutôt qu'en SQL : SQLite
@@ -64,7 +64,7 @@ function versVinyle(ligne) {
   return vinyle;
 }
 
-export function creerDepotVinyles(db) {
+export function creerDepotVinyles(db, { maxVinyles = MAX_VINYLES } = {}) {
   const champs = Object.keys(COLONNES);
   const colonnes = Object.values(COLONNES);
 
@@ -83,6 +83,15 @@ export function creerDepotVinyles(db) {
   );
   const requeteParId = db.prepare('SELECT * FROM vinyles WHERE id = ?');
   const requeteSuppression = db.prepare('DELETE FROM vinyles WHERE id = ?');
+  const requeteTransfert = db.prepare(
+    `UPDATE vinyles
+     SET liste = 'collection',
+         etat_disque = @etatDisque,
+         etat_pochette = @etatPochette,
+         notes = @notes,
+         date_modification = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+     WHERE id = @id`,
+  );
   const requeteCompter = db.prepare('SELECT COUNT(*) AS total FROM vinyles');
   const requeteGenres = db.prepare(
     `SELECT genre FROM vinyles
@@ -114,8 +123,8 @@ export function creerDepotVinyles(db) {
 
     creer(valeurs) {
       const { total } = requeteCompter.get();
-      if (total >= MAX_VINYLES) {
-        throw new ErreurApi(400, `La collection a atteint sa limite maximale de ${MAX_VINYLES} vinyles.`);
+      if (total >= maxVinyles) {
+        throw new ErreurApi(400, `La collection a atteint sa limite maximale de ${maxVinyles} vinyles.`);
       }
       const { lastInsertRowid } = requeteInsertion.run(valeurs);
       return this.trouver(lastInsertRowid);
@@ -124,6 +133,43 @@ export function creerDepotVinyles(db) {
     modifier(id, valeurs) {
       const { changes } = requeteMiseAJour.run({ ...valeurs, id });
       return changes > 0 ? this.trouver(id) : null;
+    },
+
+    modifierPartiellement(id, modifications) {
+      const champsAModifier = Object.keys(modifications).filter((champ) => Object.hasOwn(COLONNES, champ));
+      if (champsAModifier.length === 0) return this.trouver(id);
+
+      const affectations = champsAModifier.map((champ) => `${COLONNES[champ]} = @${champ}`).join(', ');
+      const parametres = Object.fromEntries(champsAModifier.map((champ) => [champ, modifications[champ]]));
+      const requete = db.prepare(
+        `UPDATE vinyles
+         SET ${affectations},
+             date_modification = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+         WHERE id = @id`,
+      );
+      const { changes } = requete.run({ ...parametres, id });
+      return changes > 0 ? this.trouver(id) : null;
+    },
+
+    transfererVersCollection(id, complements = {}) {
+      // Transaction pour vérifier l'état courant et basculer la liste sans doublon ni perte de champs.
+      const executer = db.transaction(() => {
+        const existant = this.trouver(id);
+        if (!existant) return null;
+        if (existant.liste !== 'envies') {
+          throw erreurConflit('Ce vinyle fait déjà partie de la collection');
+        }
+
+        requeteTransfert.run({
+          id,
+          etatDisque: 'etatDisque' in complements ? complements.etatDisque : existant.etatDisque,
+          etatPochette: 'etatPochette' in complements ? complements.etatPochette : existant.etatPochette,
+          notes: 'notes' in complements ? complements.notes : existant.notes,
+        });
+        return this.trouver(id);
+      });
+
+      return executer();
     },
 
     supprimer(id) {

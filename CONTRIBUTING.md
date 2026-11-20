@@ -107,7 +107,7 @@ L'intégration GitHub de Linear relie automatiquement les branches et les PR aux
 
 Une tâche n'est **terminée** que si :
 
-- [ ] le code est fusionné dans `main` ;
+- [ ] le code a suivi le flux complet : `dev` → `test` → `main` ;
 - [ ] les tests passent et couvrent le nouveau comportement ;
 - [ ] la PR a été relue et approuvée ;
 - [ ] l'accord front / back et la documentation sont à jour si besoin ;
@@ -188,107 +188,116 @@ Le Product Owner priorise la story dans le backlog. Une fois qu'elle entre dans 
 
 ## Workflow Git
 
-La branche `main` doit toujours rester stable. On ne pousse jamais directement dessus.
+Le code suit obligatoirement ce flux avant d'atteindre la production :
 
-1. Mettez votre `main` à jour :
+```
+feature/* ou fix/*  →  dev  →  test  →  main
+```
 
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
+- **`dev`** : intégration continue. Toutes les branches de travail y convergent.
+- **`test`** : qualification (QA). On valide que tout fonctionne ensemble avant la prod.
+- **`main`** : production. Toujours stable, jamais poussée directement.
 
-2. Créez une branche depuis `main` en suivant ce format : `<type>/<identifiant-linear>-<description-courte>`
+Un workflow GitHub Actions (`branch-flow.yml`) bloque automatiquement toute PR qui ne respecte pas cet ordre.
 
-   | Type        | Usage                                   | Exemple                           |
-   | ----------- | --------------------------------------- | --------------------------------- |
-   | `feature/`  | Nouvelle fonctionnalité                 | `feature/CFB-12-liste-envies`     |
-   | `fix/`      | Correction de bug                       | `fix/CFB-27-tri-annee-reedition`  |
-   | `docs/`     | Documentation                           | `docs/CFB-5-contributing`         |
-   | `refactor/` | Refonte sans changement de comportement | `refactor/CFB-18-service-vinyles` |
-   | `chore/`    | Maintenance (dépendances, config, CI)   | `chore/CFB-30-maj-dependances`    |
+### 1. Mettre à jour sa branche de travail
 
-   L'identifiant Linear dans le nom de branche permet de relier automatiquement la branche à l'issue.
+Partez toujours de `dev` pour créer votre branche :
 
-3. Faites des commits petits et cohérents.
-4. Avant d'ouvrir la PR, rebasez votre branche sur `main` pour résoudre les conflits de votre côté :
+```bash
+git checkout dev
+git pull origin dev
+```
 
-   ```bash
-   git fetch origin
-   git rebase origin/main
-   ```
+### 2. Créer une branche de travail
 
-## Convention de commits
+Format : `<type>/<identifiant-linear>-<description-courte>`
 
-Stratégie de gestion des branches Git
-1. Branches permanentes
-main : Branche de déploiement en production. Elle doit toujours contenir un code stable et prêt à être déployé.
-qualif : Branche de qualification (ou pré-production). Elle sert à déployer l'environnement de test afin de valider les tickets avant leur passage en production.
-2. Branches de développement (éphémères)
+| Type        | Usage                                   | Exemple                           |
+| ----------- | --------------------------------------- | --------------------------------- |
+| `feature/`  | Nouvelle fonctionnalité                 | `feature/CFB-12-liste-envies`     |
+| `fix/`      | Correction de bug                       | `fix/CFB-27-tri-annee-reedition`  |
+| `docs/`     | Documentation                           | `docs/CFB-5-contributing`         |
+| `refactor/` | Refonte sans changement de comportement | `refactor/CFB-18-service-vinyles` |
+| `chore/`    | Maintenance (dépendances, config, CI)   | `chore/CFB-30-maj-dependances`    |
 
-Ces branches sont créées à partir de main et suivent la nomenclature des tickets Linear.
+L'identifiant Linear dans le nom de branche relie automatiquement la branche à l'issue.
 
-Types de branches
-feature/<ID-Linear>-nom-court : Pour le développement d'une nouvelle fonctionnalité.
-Exemple : feature/LIN-101-ajout-bouton-login
-fix/<ID-Linear>-nom-court : Pour la correction de bugs.
-Exemple : fix/LIN-102-erreur-404-profil
-conf/<ID-Linear>-nom-court : Pour les modifications de configuration ou d'infrastructure.
-Exemple : conf/LIN-103-update-variables-env
-3. Cycle de vie d'un ticket
-Étape 1 — Création
+### 3. Développer et committer
 
-Créer une branche de travail (feature/, fix/ ou conf/) toujours à partir de main.
+Faites des commits petits et cohérents (voir [Convention de commits](#convention-de-commits)).
 
-Étape 2 — Développement
+### 4. Ouvrir une PR vers `dev`
 
-Effectuer les commits nécessaires sur la branche de travail dédiée au ticket.
+Avant d'ouvrir la PR, rebasez votre branche sur `dev` pour résoudre les conflits de votre côté :
 
-Étape 3 — Qualification
+```bash
+git fetch origin
+git rebase origin/dev
+```
 
-Ouvrir une Pull Request (PR) ou fusionner la branche de travail vers qualif afin que la fonctionnalité soit testée sur l'environnement de staging.
+Ouvrez ensuite une PR de votre branche vers **`dev`**. Une approbation est requise.
 
-Étape 4 — Mise en production
+### 5. Passer de `dev` vers `test` (QA)
 
-Une fois la QA validée sur qualif, ouvrir une PR de la branche de travail directement vers main.
+Une fois les fonctionnalités du sprint intégrées dans `dev` et prêtes à être testées, ouvrez une PR de **`dev` vers `test`**. L'équipe QA valide les comportements sur cet environnement.
 
-Après la fusion dans main, la branche de développement peut être supprimée.
+> Le workflow CI bloque cette PR si la source n'est pas `dev`.
 
-4. Récapitulatif du workflow
-Créer une branche depuis main.
-Développer et committer les modifications sur cette branche.
-Déployer et tester les modifications sur qualif.
-Valider la QA.
-Ouvrir une PR vers main.
-Fusionner la PR après validation.
-Supprimer la branche de développement.
+### 6. Passer de `test` vers `main` (production)
+
+Après validation QA et accord du Product Owner, ouvrez une PR de **`test` vers `main`**. Deux approbations sont requises (une front, une back si la PR touche les deux).
+
+> Le workflow CI bloque cette PR si la source n'est pas `test`.
+
+### Récapitulatif du flux
 
 ```mermaid
 gitGraph
    commit id: "prod stable"
-   branch qualif
+   branch dev
+   branch test
+   checkout dev
+   branch "feature/CFB-12-liste-envies"
+   commit id: "CFB-12 : composant liste"
+   commit id: "CFB-12 : tests"
+   branch "fix/CFB-27-tri-annee"
+   commit id: "CFB-27 : correctif tri"
+   checkout dev
+   merge "feature/CFB-12-liste-envies" id: "dev ← CFB-12"
+   merge "fix/CFB-27-tri-annee" id: "dev ← CFB-27"
+   checkout test
+   merge dev id: "test ← dev (QA)"
    checkout main
-   branch "feature/LIN-101-ajout-bouton-login"
-   commit id: "LIN-101 : bouton"
-   commit id: "LIN-101 : tests"
-   checkout main
-   branch "fix/LIN-102-erreur-404-profil"
-   commit id: "LIN-102 : correctif"
-   checkout main
-   branch "conf/LIN-103-update-variables-env"
-   commit id: "LIN-103 : variables"
-   checkout qualif
-   merge "feature/LIN-101-ajout-bouton-login" id: "qualif LIN-101"
-   merge "fix/LIN-102-erreur-404-profil" id: "qualif LIN-102"
-   merge "conf/LIN-103-update-variables-env" id: "qualif LIN-103"
-   checkout main
-   merge "fix/LIN-102-erreur-404-profil" id: "prod LIN-102"
-   merge "feature/LIN-101-ajout-bouton-login" id: "prod LIN-101"
-   merge "conf/LIN-103-update-variables-env" id: "prod LIN-103"
+   merge test id: "main ← test (prod)"
 ```
+
+## Convention de commits
+
+Utilisez le format **Conventional Commits** pour chaque commit :
+
+```
+<type>(<scope>): <description courte>
+```
+
+| Type       | Usage                                      | Exemple                                      |
+| ---------- | ------------------------------------------ | -------------------------------------------- |
+| `feat`     | Nouvelle fonctionnalité                    | `feat(vinyle): ajouter le tri par année`     |
+| `fix`      | Correction de bug                          | `fix(auth): corriger la redirection login`   |
+| `docs`     | Documentation uniquement                   | `docs(contributing): mettre à jour workflow` |
+| `refactor` | Refonte sans changement de comportement    | `refactor(api): extraire le service vinyle`  |
+| `test`     | Ajout ou correction de tests               | `test(collection): couvrir l'ajout en masse` |
+| `chore`    | Maintenance (dépendances, config, CI)      | `chore(deps): mettre à jour Spring Boot`     |
+
+Règles :
+- Description en minuscules, sans point final.
+- Maximum 72 caractères sur la première ligne.
+- Ajoutez un corps de message si le changement mérite une explication.
+- Référencez l'issue Linear : `Refs CFB-12` ou `Fixes CFB-27`.
 
 ## Pull requests
 
-1. Poussez votre branche et ouvrez une PR vers `main`. Si le travail n'est pas fini mais que vous voulez un avis, ouvrez-la en **brouillon** (*draft*).
+1. Poussez votre branche et ouvrez une PR vers **`dev`**. Si le travail n'est pas fini mais que vous voulez un avis, ouvrez-la en **brouillon** (*draft*).
 2. Donnez-lui un titre clair (même format que les commits) et une description qui explique :
    - **quoi** : ce que la PR change ;
    - **pourquoi** : le lien avec l'issue Linear (`Fixes CFB-12`) ;

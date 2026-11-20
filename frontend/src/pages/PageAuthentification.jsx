@@ -129,17 +129,26 @@ export default function PageAuthentification({ mode }) {
   }
 
   return (
-    <section className="authentification">
-      <header className="entete-formulaire">
-        <h1>{estInscription ? 'Créer un compte' : 'Connexion'}</h1>
-        <p className="text-secondary">
+    <section className="mx-auto max-w-md py-4">
+      <header className="mb-6">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-terre">
+          {estInscription ? 'Nouveau collectionneur' : 'Espace personnel'}
+        </p>
+        <h1 className="mt-1.5 font-serif text-3xl font-bold text-encre">
+          {estInscription ? 'Créer un compte' : 'Connexion'}
+        </h1>
+        <p className="mt-2 text-sm text-encre-douce">
           {estInscription
             ? 'Inscrivez-vous pour retrouver votre espace CoordinationFB.'
             : 'Connectez-vous à votre compte CoordinationFB.'}
         </p>
       </header>
 
-      <form className="formulaire card authentification__formulaire" onSubmit={soumettre} noValidate>
+      <form
+        className="space-y-5 rounded-lg border border-ligne bg-carte p-6 shadow-2xs sm:p-7"
+        onSubmit={soumettre}
+        noValidate
+      >
         <MessageErreur erreur={erreurGenerale} />
 
         <ChampFormulaire id="auth-email" libelle="Adresse e-mail" erreur={erreurs.email} obligatoire>
@@ -149,12 +158,20 @@ export default function PageAuthentification({ mode }) {
             autoComplete="email"
             maxLength={LONGUEUR_MAX_EMAIL}
             autoCapitalize="none"
+            placeholder="collectionneur@exemple.fr"
           />
         </ChampFormulaire>
 
         {estInscription && (
           <ChampFormulaire id="auth-nom" libelle="Nom" erreur={erreurs.nom} obligatoire>
-            <input {...proprietesChamp('nom')} type="text" autoComplete="name" minLength={2} maxLength={LONGUEUR_MAX_NOM} />
+            <input
+              {...proprietesChamp('nom')}
+              type="text"
+              autoComplete="name"
+              minLength={2}
+              maxLength={LONGUEUR_MAX_NOM}
+              placeholder="Alex Martin"
+            />
           </ChampFormulaire>
         )}
 
@@ -190,12 +207,20 @@ export default function PageAuthentification({ mode }) {
           </ChampFormulaire>
         )}
 
-        <button type="submit" className="btn btn-primary" disabled={envoiEnCours}>
+        <button
+          type="submit"
+          disabled={envoiEnCours}
+          className="inline-flex h-[42px] w-full cursor-pointer items-center justify-center rounded-md bg-terre px-5 text-sm font-semibold text-white transition-colors hover:bg-terre-fonce disabled:cursor-not-allowed disabled:opacity-60"
+        >
           {envoiEnCours ? 'Envoi en cours…' : estInscription ? 'Créer mon compte' : 'Se connecter'}
         </button>
-        <p className="authentification__lien text-secondary">
+
+        <p className="m-0 border-t border-ligne pt-4 text-center text-sm text-encre-douce">
           {estInscription ? 'Vous avez déjà un compte ? ' : 'Pas encore de compte ? '}
-          <Link to={estInscription ? '/connexion' : '/inscription'}>
+          <Link
+            to={estInscription ? '/connexion' : '/inscription'}
+            className="font-semibold text-terre no-underline hover:underline"
+          >
             {estInscription ? 'Se connecter' : 'Créer un compte'}
           </Link>
         </p>

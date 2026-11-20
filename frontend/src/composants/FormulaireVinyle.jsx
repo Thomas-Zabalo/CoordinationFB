@@ -123,13 +123,20 @@ export default function FormulaireVinyle({
   }
 
   return (
-    <form className="formulaire card" onSubmit={enregistrer} noValidate>
-      <div className="formulaire__entete">
-        <p className="text-secondary formulaire__legende">
-          Les champs marqués d’un <span className="champ__obligatoire">*</span> sont obligatoires.
+    <form
+      className="space-y-8 rounded-lg border border-ligne bg-carte p-6 shadow-2xs sm:p-8"
+      onSubmit={enregistrer}
+      noValidate
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ligne pb-4">
+        <p className="m-0 text-sm text-encre-douce">
+          Les champs marqués d’un <span className="font-bold text-terre">*</span> sont obligatoires.
         </p>
         {mode === 'modification' && estModifie && (
-          <span className="formulaire__statut" role="status">
+          <span
+            className="inline-flex h-6 items-center rounded border border-terre/30 bg-terre-clair px-2.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-terre"
+            role="status"
+          >
             Modifications non enregistrées
           </span>
         )}
@@ -137,34 +144,49 @@ export default function FormulaireVinyle({
 
       <MessageErreur erreur={erreurGenerale} />
 
-      <fieldset>
-        <legend>Liste</legend>
-        <div className="choix-liste">
-          {Object.entries(LISTES).map(([cle, liste]) => (
-            <label key={cle} className="choix-liste__option">
-              <input
-                type="radio"
-                name="liste"
-                value={cle}
-                checked={formulaire.liste === cle}
-                onChange={modifier('liste')}
-                aria-label={liste.nomCourt}
-                aria-describedby={`liste-${cle}-description`}
-              />
-              <span className="choix-liste__texte">
-                <span className="choix-liste__titre">{liste.nomCourt}</span>
-                <span id={`liste-${cle}-description`} className="choix-liste__description">
-                  {liste.description}
+      <fieldset className="m-0 border-0 p-0">
+        <legend className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-terre">
+          01 / Liste
+        </legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Object.entries(LISTES).map(([cle, liste]) => {
+            const coche = formulaire.liste === cle;
+            return (
+              <label
+                key={cle}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border p-4 transition-colors ${
+                  coche
+                    ? 'border-terre bg-terre-clair/60'
+                    : 'border-ligne bg-papier/40 hover:border-encre/40'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="liste"
+                  value={cle}
+                  checked={coche}
+                  onChange={modifier('liste')}
+                  aria-label={liste.nomCourt}
+                  aria-describedby={`liste-${cle}-description`}
+                  className="mt-1 h-4 w-4 accent-terre"
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-encre">{liste.nomCourt}</span>
+                  <span id={`liste-${cle}-description`} className="text-xs text-encre-douce">
+                    {liste.description}
+                  </span>
                 </span>
-              </span>
-            </label>
-          ))}
+              </label>
+            );
+          })}
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>Sortie</legend>
-        <div className="grille-champs">
+      <fieldset className="m-0 border-0 border-t border-ligne pt-7 p-0">
+        <legend className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-terre">
+          02 / Sortie
+        </legend>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ChampFormulaire id="vinyle-artiste" libelle="Artiste" erreur={erreurs.artiste} obligatoire>
             <input
               {...proprietesChamp('artiste', { validerSurBlur: true })}
@@ -214,9 +236,11 @@ export default function FormulaireVinyle({
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>Pressage</legend>
-        <div className="grille-champs">
+      <fieldset className="m-0 border-0 border-t border-ligne pt-7 p-0">
+        <legend className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-terre">
+          03 / Pressage &amp; Catalogue
+        </legend>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <ChampFormulaire id="vinyle-label" libelle="Label" erreur={erreurs.label}>
             <input {...proprietesChamp('label')} maxLength={LONGUEUR_MAX_TEXTE} placeholder="ex. Columbia" />
           </ChampFormulaire>
@@ -228,7 +252,8 @@ export default function FormulaireVinyle({
             <input
               {...proprietesChamp('numeroCatalogue')}
               maxLength={LONGUEUR_MAX_TEXTE}
-              placeholder="ex. PCS 7027"
+              placeholder="ex. CS 8163"
+              className="!font-mono"
             />
           </ChampFormulaire>
           <ChampFormulaire id="vinyle-format" libelle="Format" erreur={erreurs.format}>
@@ -264,14 +289,16 @@ export default function FormulaireVinyle({
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>État (échelle Goldmine)</legend>
-        <p className="text-secondary">
+      <fieldset className="m-0 border-0 border-t border-ligne pt-7 p-0">
+        <legend className="mb-1.5 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-terre">
+          04 / État (échelle Goldmine)
+        </legend>
+        <p className="mb-4 text-sm text-encre-douce">
           {formulaire.liste === 'envies'
             ? 'Le disque et la pochette sont notés séparément. Facultatif : indiquez l’état minimal recherché.'
             : 'Le disque et la pochette sont notés séparément selon le standard du marché du disque.'}
         </p>
-        <div className="grille-champs">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <SelecteurEtat
             id="vinyle-etatDisque"
             libelle="État du disque"
@@ -289,34 +316,46 @@ export default function FormulaireVinyle({
         </div>
       </fieldset>
 
-      <ChampFormulaire
-        id="vinyle-notes"
-        libelle="Notes"
-        erreur={erreurs.notes}
-        aide="Particularités du pressage, matrice, lieu ou prix d’achat…"
-        compteur={{
-          texte: `${longueurNotes} / ${LONGUEUR_MAX_NOTES}`,
-          depasse: longueurNotes > LONGUEUR_MAX_NOTES,
-        }}
-      >
-        <textarea {...proprietesChamp('notes')} rows={4} maxLength={LONGUEUR_MAX_NOTES} />
-      </ChampFormulaire>
+      <div className="border-t border-ligne pt-7">
+        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-terre">05 / Notes</p>
+        <ChampFormulaire
+          id="vinyle-notes"
+          libelle="Notes"
+          erreur={erreurs.notes}
+          aide="Particularités du pressage, matrice, lieu ou prix d’achat…"
+          compteur={{
+            texte: `${longueurNotes} / ${LONGUEUR_MAX_NOTES}`,
+            depasse: longueurNotes > LONGUEUR_MAX_NOTES,
+          }}
+        >
+          <textarea {...proprietesChamp('notes')} rows={4} maxLength={LONGUEUR_MAX_NOTES} />
+        </ChampFormulaire>
+      </div>
 
-      <div className="actions">
-        <button type="submit" className="btn btn-primary" disabled={envoiEnCours}>
+      <div className="flex flex-wrap items-center gap-3 border-t border-ligne pt-6">
+        <button
+          type="submit"
+          disabled={envoiEnCours}
+          className="inline-flex h-[42px] cursor-pointer items-center justify-center rounded-md bg-terre px-6 text-sm font-semibold text-white transition-colors hover:bg-terre-fonce disabled:cursor-not-allowed disabled:opacity-60"
+        >
           {envoiEnCours ? 'Enregistrement…' : libelleBouton}
         </button>
         {mode === 'modification' && (
           <button
             type="button"
-            className="btn btn-outline"
             onClick={reinitialiser}
             disabled={envoiEnCours || !estModifie}
+            className="inline-flex h-[42px] cursor-pointer items-center justify-center rounded-md border border-encre bg-carte px-5 text-sm font-medium text-encre transition-colors hover:bg-papier disabled:cursor-not-allowed disabled:opacity-45"
           >
             Réinitialiser
           </button>
         )}
-        <button type="button" className="btn btn-secondary" onClick={onAnnuler} disabled={envoiEnCours}>
+        <button
+          type="button"
+          onClick={onAnnuler}
+          disabled={envoiEnCours}
+          className="inline-flex h-[42px] cursor-pointer items-center justify-center rounded-md px-4 text-sm font-medium text-encre-douce transition-colors hover:bg-papier hover:text-encre disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Annuler
         </button>
       </div>

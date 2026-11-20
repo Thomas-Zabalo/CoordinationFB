@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router';
 import { deconnecter } from '../api/auth.js';
-import { useAuthentification } from '../auth/ContexteAuthentification.jsx';
+import { useAuthentification } from '../auth/authentificationContexte.js';
 import { useToast } from './toastContexte.js';
 import { LISTES } from '../vinyles/constantes.js';
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { connecter, inscrire } from '../api/auth.js';
 import { ErreurApi } from '../api/requete.js';
-import { useAuthentification } from '../auth/ContexteAuthentification.jsx';
+import { useAuthentification } from '../auth/authentificationContexte.js';
 import ChampFormulaire from '../composants/ChampFormulaire.jsx';
 import MessageErreur from '../composants/MessageErreur.jsx';
 

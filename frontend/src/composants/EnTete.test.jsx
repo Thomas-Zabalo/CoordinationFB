@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../api/auth.js', () => ({ deconnecter: vi.fn() }));
-vi.mock('../auth/ContexteAuthentification.jsx', () => ({
+vi.mock('../auth/authentificationContexte.js', () => ({
   useAuthentification: () => ({
     utilisateur: mocks.utilisateur,
     setUtilisateur: mocks.setUtilisateur,

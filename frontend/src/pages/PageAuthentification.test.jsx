@@ -13,7 +13,7 @@ vi.mock('../api/auth.js', () => ({
   inscrire: vi.fn(),
 }));
 
-vi.mock('../auth/ContexteAuthentification.jsx', () => ({
+vi.mock('../auth/authentificationContexte.js', () => ({
   useAuthentification: () => ({ setUtilisateur: mocks.setUtilisateur }),
 }));
 

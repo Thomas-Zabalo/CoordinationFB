@@ -1,9 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { obtenirUtilisateur } from '../api/auth.js';
 import { ErreurApi } from '../api/requete.js';
 import { useToast } from '../composants/toastContexte.js';
-
-const ContexteAuthentification = createContext(null);
+import { contexteAuthentification } from './authentificationContexte.js';
 
 export function FournisseurAuthentification({ children }) {
   const [utilisateur, setUtilisateur] = useState(null);
@@ -32,11 +31,5 @@ export function FournisseurAuthentification({ children }) {
     [utilisateur, chargement],
   );
 
-  return <ContexteAuthentification.Provider value={valeur}>{children}</ContexteAuthentification.Provider>;
-}
-
-export function useAuthentification() {
-  const contexte = useContext(ContexteAuthentification);
-  if (!contexte) throw new Error('useAuthentification doit être utilisé dans FournisseurAuthentification');
-  return contexte;
+  return <contexteAuthentification.Provider value={valeur}>{children}</contexteAuthentification.Provider>;
 }

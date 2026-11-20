@@ -57,10 +57,10 @@ describe('PageAuthentification', () => {
     const utilisateur = userEvent.setup();
     afficherPage('inscription');
 
-    await utilisateur.type(screen.getByLabelText('Adresse e-mail'), ' alex@example.com ');
-    await utilisateur.type(screen.getByLabelText('Nom'), ' Alex ');
-    await utilisateur.type(screen.getByLabelText('Mot de passe'), 'secret123');
-    await utilisateur.type(screen.getByLabelText('Confirmer le mot de passe'), 'secret123');
+    await utilisateur.type(screen.getByLabelText(/Adresse e-mail/), ' alex@example.com ');
+    await utilisateur.type(screen.getByLabelText(/Nom/), ' Alex ');
+    await utilisateur.type(screen.getByLabelText(/Mot de passe/), 'secret123');
+    await utilisateur.type(screen.getByLabelText(/Confirmer le mot de passe/), 'secret123');
     await utilisateur.click(screen.getByRole('button', { name: 'Créer mon compte' }));
 
     expect(inscrire).toHaveBeenCalledWith({ email: 'alex@example.com', nom: 'Alex', motDePasse: 'secret123' });
@@ -73,8 +73,8 @@ describe('PageAuthentification', () => {
     const utilisateur = userEvent.setup();
     afficherPage('connexion');
 
-    await utilisateur.type(screen.getByLabelText('Adresse e-mail'), 'alex@example.com');
-    await utilisateur.type(screen.getByLabelText('Mot de passe'), 'secret123');
+    await utilisateur.type(screen.getByLabelText(/Adresse e-mail/), 'alex@example.com');
+    await utilisateur.type(screen.getByLabelText(/Mot de passe/), 'secret123');
     await utilisateur.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(connecter).toHaveBeenCalledWith({ email: 'alex@example.com', motDePasse: 'secret123' });
@@ -87,8 +87,8 @@ describe('PageAuthentification', () => {
     const utilisateur = userEvent.setup();
     afficherPage('connexion');
 
-    await utilisateur.type(screen.getByLabelText('Adresse e-mail'), 'alex@example.com');
-    await utilisateur.type(screen.getByLabelText('Mot de passe'), 'secret123');
+    await utilisateur.type(screen.getByLabelText(/Adresse e-mail/), 'alex@example.com');
+    await utilisateur.type(screen.getByLabelText(/Mot de passe/), 'secret123');
     await utilisateur.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(connecter).toHaveBeenCalledWith({ email: 'alex@example.com', motDePasse: 'secret123' });

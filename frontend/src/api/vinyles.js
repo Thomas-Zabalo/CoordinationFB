@@ -63,3 +63,7 @@ export function modifierVinyle(id, vinyle) {
 export function supprimerVinyle(id) {
   return requete(`/vinyles/${id}`, { methode: 'DELETE' });
 }
+
+export function declencherErreurApi(statut, signal) {
+  return requete(`/test-erreur/${statut}`, { signal });
+}

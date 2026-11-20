@@ -425,4 +425,12 @@ describe('API /vinyles', () => {
     const reponse = await request(app).get('/inconnue').expect(404);
     assert.match(reponse.body.erreur.message, /Route introuvable/);
   });
+
+  it('simule une erreur avec le statut demandé', async () => {
+    const reponse403 = await request(app).get('/api/test-erreur/403').expect(403);
+    assert.match(reponse403.body.erreur.message, /Erreur 403/);
+
+    const reponse500 = await request(app).get('/api/test-erreur/500').expect(500);
+    assert.match(reponse500.body.erreur.message, /simulation backend 500/);
+  });
 });

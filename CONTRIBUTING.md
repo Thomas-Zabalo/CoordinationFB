@@ -265,7 +265,7 @@ Supprimer la branche de développement.
 ```mermaid
 gitGraph
    commit id: "prod stable"
-   branch qualif
+   branch dev
    checkout main
    branch "feature/LIN-101-ajout-bouton-login"
    commit id: "LIN-101 : bouton"
@@ -276,10 +276,10 @@ gitGraph
    checkout main
    branch "conf/LIN-103-update-variables-env"
    commit id: "LIN-103 : variables"
-   checkout qualif
-   merge "feature/LIN-101-ajout-bouton-login" id: "qualif LIN-101"
-   merge "fix/LIN-102-erreur-404-profil" id: "qualif LIN-102"
-   merge "conf/LIN-103-update-variables-env" id: "qualif LIN-103"
+   checkout dev
+   merge "feature/LIN-101-ajout-bouton-login" id: "dev LIN-101"
+   merge "fix/LIN-102-erreur-404-profil" id: "dev LIN-102"
+   merge "conf/LIN-103-update-variables-env" id: "dev LIN-103"
    checkout main
    merge "fix/LIN-102-erreur-404-profil" id: "prod LIN-102"
    merge "feature/LIN-101-ajout-bouton-login" id: "prod LIN-101"

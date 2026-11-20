@@ -1,0 +1,23 @@
+# ============================================================
+# CD – Test / Staging
+# Déclenché sur push vers la branche `test`
+# ============================================================
+name: CD – Test
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  deploy-test:
+    name: Déployer en test
+    uses: ./.github/workflows/cd-deploy.yml
+    with:
+      environment: test
+      api_url: http://localhost:3001
+    secrets:
+      deploy_host:    ${{ secrets.DEPLOY_HOST_TEST }}
+      deploy_user:    ${{ secrets.DEPLOY_USER }}
+      deploy_ssh_key: ${{ secrets.DEPLOY_SSH_KEY }}
+      deploy_path:    ${{ secrets.DEPLOY_PATH }}

@@ -35,6 +35,16 @@ export function creerRoutesVinyles(db) {
     res.json(service.transferer(req.params.id, req.body));
   });
 
+  routes.post('/:id/transferer', (req, res) => {
+    const id = lireIdentifiant(req);
+    const { valeurs, erreurs } = validerTransfert(req.body);
+    if (erreurs) throw erreurValidation(erreurs);
+
+    const vinyle = depot.transfererVersCollection(id, valeurs);
+    if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
+    res.json(vinyle);
+  });
+
   routes.delete('/:id', (req, res) => {
     service.supprimer(req.params.id);
     res.status(204).end();

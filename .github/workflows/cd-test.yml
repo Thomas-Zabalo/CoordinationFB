@@ -1,6 +1,6 @@
 # ============================================================
 # CD – Test / Staging
-# Déclenché sur push vers la branche `test`
+# Push sur `test` → images taguées :test sur GHCR
 # ============================================================
 name: CD – Test
 
@@ -10,14 +10,10 @@ on:
       - test
 
 jobs:
-  deploy-test:
-    name: Déployer en test
+  publish:
+    name: Publier les images :test
     uses: ./.github/workflows/cd-deploy.yml
     with:
-      environment: test
-      api_url: http://localhost:3001
-    secrets:
-      deploy_host:    ${{ secrets.DEPLOY_HOST_TEST }}
-      deploy_user:    ${{ secrets.DEPLOY_USER }}
-      deploy_ssh_key: ${{ secrets.DEPLOY_SSH_KEY }}
-      deploy_path:    ${{ secrets.DEPLOY_PATH }}
+      environment:  test
+      image_tag:    test
+      vite_api_url: http://localhost:3000

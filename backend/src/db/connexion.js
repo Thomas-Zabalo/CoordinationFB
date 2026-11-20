@@ -1,8 +1,7 @@
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import Database from 'better-sqlite3';
-
-const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
+import { appliquerMigrations } from './migrations.js';
 
 export function ouvrirBase(chemin) {
   if (chemin !== ':memory:') {
@@ -17,5 +16,5 @@ export function ouvrirBase(chemin) {
 }
 
 export function creerSchema(db) {
-  db.exec(schema);
+  return appliquerMigrations(db);
 }

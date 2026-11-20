@@ -81,6 +81,20 @@ describe('PageListe', () => {
     expect(listerVinyles).toHaveBeenLastCalledWith(expect.objectContaining({ genre: 'Rock' }), expect.any(AbortSignal));
   });
 
+  it('bascule entre la vue grille et la vue liste', async () => {
+    vi.mocked(listerVinyles).mockResolvedValue(vinyles);
+    afficherPage();
+    const utilisateur = userEvent.setup();
+
+    await screen.findByRole('link', { name: 'Abbey Road' });
+    expect(screen.getByRole('button', { name: 'Grille' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+
+    await utilisateur.click(screen.getByRole('button', { name: 'Liste' }));
+    expect(screen.getByRole('button', { name: 'Liste' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('table')).toBeInTheDocument();
+  });
+
   it("affiche l'erreur si l'API ne répond pas", async () => {
     vi.mocked(listerVinyles).mockRejectedValue(new Error('Impossible de joindre le serveur.'));
     afficherPage();

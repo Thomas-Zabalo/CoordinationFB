@@ -14,7 +14,11 @@ process.on('unhandledRejection', (raison) => {
 const db = ouvrirBase(config.dbPath);
 // Applique automatiquement les migrations Flyway au démarrage
 appliquerMigrations(db);
-const app = creerApp({ db, corsOrigin: config.corsOrigin });
+const app = creerApp({
+  db,
+  corsOrigin: config.corsOrigin,
+  sessionDureeMs: config.sessionDureeMs,
+});
 
 app.listen(config.port, () => {
   console.log(`API CoordinationFB démarrée sur http://localhost:${config.port}`);

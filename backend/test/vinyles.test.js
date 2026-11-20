@@ -37,6 +37,11 @@ describe('API /vinyles', () => {
     assert.deepEqual(reponse.body, []);
   });
 
+  it('expose aussi les routes sous le préfixe public /api', async () => {
+    const reponse = await request(app).get('/api/vinyles').expect(200);
+    assert.deepEqual(reponse.body, []);
+  });
+
   it('ajoute un vinyle à la collection par défaut', async () => {
     const vinyle = await ajouter(abbeyRoad);
 

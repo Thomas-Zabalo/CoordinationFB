@@ -1,6 +1,7 @@
 # ============================================================
 # CD – Production
-# Déclenché sur push vers `main` (merge d'une PR uniquement)
+# Push sur `main` → images taguées :latest ET :<sha-court> sur GHCR
+# Le double tag permet de rollback en réutilisant le SHA
 # ============================================================
 name: CD – Production
 
@@ -9,15 +10,28 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  deploy-prod:
-    name: Déployer en production
+  # Calcul du SHA court (les expressions ne sont pas évaluées dans `with` des reusable workflows)
+  prepare:
+    name: Préparer le SHA court
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.sha.outputs.short }}
+    steps:
+      - name: Calculer le SHA court
+        id: sha
+        run: echo "short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  publish:
+    name: Publier les images :latest + :sha
+    needs: prepare
     uses: ./.github/workflows/cd-deploy.yml
     with:
-      environment: production
-      api_url: ${{ vars.VITE_API_URL }}
-    secrets:
-      deploy_host:    ${{ secrets.DEPLOY_HOST_PROD }}
-      deploy_user:    ${{ secrets.DEPLOY_USER }}
-      deploy_ssh_key: ${{ secrets.DEPLOY_SSH_KEY }}
-      deploy_path:    ${{ secrets.DEPLOY_PATH }}
+      environment:  production
+      image_tag:    latest
+      extra_tag:    ${{ needs.prepare.outputs.short_sha }}
+      vite_api_url: http://localhost:3000

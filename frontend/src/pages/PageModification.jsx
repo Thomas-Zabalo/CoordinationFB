@@ -19,12 +19,21 @@ export default function PageModification() {
     }
   }, [erreur, afficherErreur]);
 
-  if (chargement) return <p className="text-secondary">Chargement…</p>;
+  if (chargement) {
+    return (
+      <p className="text-secondary" role="status" aria-live="polite">
+        Chargement…
+      </p>
+    );
+  }
+
   if (erreur || !vinyle) {
     return (
       <>
         <MessageErreur erreur={erreur || 'Vinyle introuvable'} />
-        <Link to="/collection">Retour à ma collection</Link>
+        <Link to="/collection" className="lien-retour">
+          ← Retour à ma collection
+        </Link>
       </>
     );
   }
@@ -36,9 +45,19 @@ export default function PageModification() {
 
   return (
     <>
-      <h1>Modifier un vinyle</h1>
+      <Link to={`/vinyles/${id}`} className="lien-retour">
+        ← Retour à la fiche
+      </Link>
+      <header className="entete-formulaire">
+        <h1>Modifier un vinyle</h1>
+        <p className="text-secondary">
+          {vinyle.artiste} — {vinyle.titre}
+        </p>
+      </header>
       <MessageSucces />
       <FormulaireVinyle
+        key={vinyle.id}
+        mode="modification"
         vinyleInitial={vinyle}
         libelleBouton="Enregistrer"
         onEnregistrer={enregistrer}

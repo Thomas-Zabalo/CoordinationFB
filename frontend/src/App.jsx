@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router';
 import EnTete from './composants/EnTete.jsx';
+import PanneauTestErreurs from './composants/PanneauTestErreurs.jsx';
 import ToastConteneur from './composants/ToastConteneur.jsx';
 import ToastProvider from './composants/ToastProvider.jsx';
 import PageAjout from './pages/PageAjout.jsx';
@@ -13,6 +14,7 @@ export default function App() {
     <ToastProvider>
       <EnTete />
       <ToastConteneur />
+      <PanneauTestErreurs />
       <main className="container contenu">
         <Routes>
           <Route path="/" element={<Navigate to="/collection" replace />} />

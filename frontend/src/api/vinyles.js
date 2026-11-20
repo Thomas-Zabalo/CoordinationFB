@@ -1,4 +1,4 @@
-const URL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const URL_API = import.meta.env.VITE_API_URL ?? '/api';
 
 export class ErreurApi extends Error {
   constructor(message, statut, details) {
@@ -62,4 +62,8 @@ export function modifierVinyle(id, vinyle) {
 
 export function supprimerVinyle(id) {
   return requete(`/vinyles/${id}`, { methode: 'DELETE' });
+}
+
+export function declencherErreurApi(statut, signal) {
+  return requete(`/test-erreur/${statut}`, { signal });
 }

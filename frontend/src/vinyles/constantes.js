@@ -15,12 +15,40 @@ export const ETATS = [
 export const FORMATS = ['LP', 'EP', 'Single', '78 tours'];
 export const TAILLES = ['12"', '10"', '7"'];
 
+export const ANNEE_MIN = 1880;
+export const LONGUEUR_MAX_TEXTE = 200;
+export const LONGUEUR_MAX_NOTES = 2000;
+
+export const GENRES_SUGGERES = [
+  'Rock',
+  'Jazz',
+  'Électro',
+  'Soul',
+  'Funk',
+  'Hip-Hop',
+  'Pop',
+  'Classique',
+  'Blues',
+  'Reggae',
+  'Metal',
+  'Folk',
+  'Chanson française',
+  'Bande originale',
+];
+
 export const LISTES = {
-  collection: { titre: 'Ma collection', nomCourt: 'Collection', nomPossessif: 'votre collection', chemin: '/collection' },
+  collection: {
+    titre: 'Ma collection',
+    nomCourt: 'Collection',
+    nomPossessif: 'votre collection',
+    description: 'Disque que vous possédez déjà',
+    chemin: '/collection',
+  },
   envies: {
     titre: "Ma liste d'envies",
     nomCourt: "Liste d'envies",
     nomPossessif: "votre liste d'envies",
+    description: 'Disque que vous recherchez',
     chemin: '/envies',
   },
 };

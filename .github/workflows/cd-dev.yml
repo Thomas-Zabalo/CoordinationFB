@@ -9,6 +9,10 @@ on:
     branches:
       - dev
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   publish:
     name: Publier les images :dev

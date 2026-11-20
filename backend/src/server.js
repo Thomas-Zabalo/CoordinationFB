@@ -11,9 +11,13 @@ process.on('unhandledRejection', (raison) => {
 });
 
 const db = ouvrirBase(config.dbPath);
-// Le schéma utilise CREATE TABLE IF NOT EXISTS : sans effet si la base est déjà initialisée.
+// Les migrations SQL sont idempotentes : sans effet si la base est déjà à jour.
 creerSchema(db);
-const app = creerApp({ db, corsOrigin: config.corsOrigin });
+const app = creerApp({
+  db,
+  corsOrigin: config.corsOrigin,
+  sessionDureeMs: config.sessionDureeMs,
+});
 
 app.listen(config.port, () => {
   console.log(`API CoordinationFB démarrée sur http://localhost:${config.port}`);

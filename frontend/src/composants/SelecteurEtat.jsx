@@ -21,9 +21,12 @@ export default function SelecteurEtat({ id, libelle, valeur, erreur, onChange })
           </option>
         ))}
       </select>
-      <div className="selecteur-etat__apercu" aria-live="polite">
+      <div
+        className="mt-1 flex min-h-8 flex-wrap items-center gap-2 rounded border border-ligne bg-papier/60 px-2.5 py-1.5"
+        aria-live="polite"
+      >
         <BadgeEtat code={valeur} />
-        <span className="text-secondary">
+        <span className="text-xs text-encre-douce">
           {etatSelectionne
             ? `${etatSelectionne.nom} — ${etatSelectionne.description}`
             : 'Aucune note sélectionnée'}

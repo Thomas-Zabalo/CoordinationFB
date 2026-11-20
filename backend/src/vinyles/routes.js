@@ -1,66 +1,42 @@
 import { Router } from 'express';
-import { erreurIntrouvable, erreurValidation } from '../erreurs.js';
 import { creerDepotVinyles } from './depot.js';
-import { validerIdentifiant, validerRecherche, validerTransfert, validerVinyle } from './validation.js';
+import { creerServiceVinyles } from './service.js';
 
 export function creerRoutesVinyles(db) {
-  const depot = creerDepotVinyles(db);
+  const service = creerServiceVinyles(creerDepotVinyles(db));
   const routes = Router();
 
-  function lireIdentifiant(req) {
-    const id = validerIdentifiant(req.params.id);
-    if (id === null) throw erreurIntrouvable('Vinyle introuvable');
-    return id;
-  }
-
-  function lireVinyle(req) {
-    const { valeurs, erreurs } = validerVinyle(req.body);
-    if (erreurs) throw erreurValidation(erreurs);
-    return valeurs;
-  }
-
   routes.get('/', (req, res) => {
-    const { filtres, erreurs } = validerRecherche(req.query);
-    if (erreurs) throw erreurValidation(erreurs);
-    res.json(depot.lister(filtres));
+    res.json(service.lister(req.query));
   });
 
   routes.get('/genres', (req, res) => {
-    const { filtres, erreurs } = validerRecherche({ liste: req.query.liste });
-    if (erreurs) throw erreurValidation(erreurs);
-    res.json(depot.listerGenres(filtres.liste));
+    res.json(service.listerGenres(req.query));
   });
 
   routes.get('/:id', (req, res) => {
-    const vinyle = depot.trouver(lireIdentifiant(req));
-    if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
-    res.json(vinyle);
+    res.json(service.consulter(req.params.id));
   });
 
   routes.post('/', (req, res) => {
-    const vinyle = depot.creer(lireVinyle(req));
+    const vinyle = service.ajouter(req.body);
     res.status(201).location(`${req.baseUrl}/${vinyle.id}`).json(vinyle);
   });
 
   routes.put('/:id', (req, res) => {
-    const id = lireIdentifiant(req);
-    const vinyle = depot.modifier(id, lireVinyle(req));
-    if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
-    res.json(vinyle);
+    res.json(service.modifier(req.params.id, req.body));
+  });
+
+  routes.patch('/:id', (req, res) => {
+    res.json(service.modifierPartiellement(req.params.id, req.body));
   });
 
   routes.post('/:id/transferer', (req, res) => {
-    const id = lireIdentifiant(req);
-    const { valeurs, erreurs } = validerTransfert(req.body);
-    if (erreurs) throw erreurValidation(erreurs);
-
-    const vinyle = depot.transfererVersCollection(id, valeurs);
-    if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
-    res.json(vinyle);
+    res.json(service.transferer(req.params.id, req.body));
   });
 
   routes.delete('/:id', (req, res) => {
-    if (!depot.supprimer(lireIdentifiant(req))) throw erreurIntrouvable('Vinyle introuvable');
+    service.supprimer(req.params.id);
     res.status(204).end();
   });
 

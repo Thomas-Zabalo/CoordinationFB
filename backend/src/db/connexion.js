@@ -15,6 +15,12 @@ export function ouvrirBase(chemin) {
   return db;
 }
 
+/**
+ * Initialise le schéma en appliquant les migrations Flyway.
+ * Garantit la cohérence en développement comme lors des tests en mémoire (:memory:).
+ */
 export function creerSchema(db) {
-  return appliquerMigrations(db);
+  appliquerMigrations(db, { silencieux: true });
 }
+
+export { appliquerMigrations };

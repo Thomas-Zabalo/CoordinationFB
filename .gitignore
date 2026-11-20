@@ -14,6 +14,8 @@ frontend/dist/
 
 # Journaux et fichiers système
 *.log
+backend/report.*
+backend/.flyway/
 .DS_Store
 Thumbs.db
 

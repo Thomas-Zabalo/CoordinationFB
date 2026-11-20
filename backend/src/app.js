@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { creerRoutesAuth } from './auth/routes.js';
 import { ErreurApi, erreurInterdit, erreurIntrouvable, gestionnaireErreurs, routeIntrouvable } from './erreurs.js';
 import { enTetesSecurite, limiteurRequetes, validerContentType, verifierOrigineCors } from './securite.js';
 import { creerRoutesVinyles } from './vinyles/routes.js';
@@ -7,6 +8,7 @@ import { creerRoutesVinyles } from './vinyles/routes.js';
 export function creerApp({
   db,
   corsOrigin,
+  sessionDureeMs,
   activerLimiteur = !db?.memory && process.env.NODE_ENV !== 'test',
 }) {
   const app = express();
@@ -16,7 +18,7 @@ export function creerApp({
   if (activerLimiteur) {
     app.use(limiteurRequetes);
   }
-  app.use(cors({ origin: verifierOrigineCors(corsOrigin) }));
+  app.use(cors({ origin: verifierOrigineCors(corsOrigin), credentials: true }));
   app.use(validerContentType);
   app.use(express.json({ limit: '50kb' }));
 
@@ -32,6 +34,7 @@ export function creerApp({
     if (statut === 500) return next(new ErreurApi(500, 'Erreur interne du serveur (simulation backend 500)'));
     next(new ErreurApi(statut || 400, `Erreur ${statut || 400} de test générée par le serveur`));
   });
+  routesApi.use('/auth', creerRoutesAuth(db, { dureeSessionMs: sessionDureeMs }));
   routesApi.use('/vinyles', creerRoutesVinyles(db));
 
   app.use('/api', routesApi);

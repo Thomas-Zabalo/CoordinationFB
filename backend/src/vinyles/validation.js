@@ -179,6 +179,32 @@ export function validerRecherche(query) {
   return Object.keys(erreurs).length > 0 ? { erreurs } : { filtres };
 }
 
+export function validerTransfert(corps) {
+  const donnees = corps && typeof corps === 'object' ? corps : {};
+  const valeurs = {};
+  const erreurs = {};
+
+  if ('etatDisque' in donnees) {
+    const resultat = validerEnumere(donnees.etatDisque, ETATS);
+    if (resultat.erreur) erreurs.etatDisque = resultat.erreur;
+    else valeurs.etatDisque = resultat.valeur;
+  }
+
+  if ('etatPochette' in donnees) {
+    const resultat = validerEnumere(donnees.etatPochette, ETATS);
+    if (resultat.erreur) erreurs.etatPochette = resultat.erreur;
+    else valeurs.etatPochette = resultat.valeur;
+  }
+
+  if ('notes' in donnees) {
+    const resultat = validerTexte(donnees.notes, LONGUEUR_MAX_NOTES);
+    if (resultat.erreur) erreurs.notes = resultat.erreur;
+    else valeurs.notes = resultat.valeur;
+  }
+
+  return Object.keys(erreurs).length > 0 ? { erreurs } : { valeurs };
+}
+
 export function validerIdentifiant(valeur) {
   if (typeof valeur !== 'string' && typeof valeur !== 'number') return null;
   const texte = String(valeur).trim();

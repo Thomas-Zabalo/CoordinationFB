@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { creerDepotVinyles } from './depot.js';
 import { creerServiceVinyles } from './service.js';
+import { validerIdentifiant, validerRecherche, validerTransfert, validerVinyle } from './validation.js';
+
 
 export function creerRoutesVinyles(db) {
   const service = creerServiceVinyles(creerDepotVinyles(db));
@@ -29,6 +31,16 @@ export function creerRoutesVinyles(db) {
 
   routes.patch('/:id', (req, res) => {
     res.json(service.modifierPartiellement(req.params.id, req.body));
+  });
+
+  routes.post('/:id/transferer', (req, res) => {
+    const id = lireIdentifiant(req);
+    const { valeurs, erreurs } = validerTransfert(req.body);
+    if (erreurs) throw erreurValidation(erreurs);
+
+    const vinyle = depot.transfererVersCollection(id, valeurs);
+    if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
+    res.json(vinyle);
   });
 
   routes.delete('/:id', (req, res) => {

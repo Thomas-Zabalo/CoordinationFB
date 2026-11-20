@@ -34,7 +34,8 @@ export function creerApp({
   });
   routesApi.use('/vinyles', creerRoutesVinyles(db));
 
-  app.use(['/api', '/'], routesApi);
+  app.use('/api', routesApi);
+  app.use(routesApi);
   app.use(routeIntrouvable);
   app.use(gestionnaireErreurs);
 

@@ -48,6 +48,7 @@ a {
 
 .nav__liens {
   display: flex;
+  align-items: center;
   gap: var(--spacing-lg);
 }
 
@@ -59,6 +60,36 @@ a {
 
 .nav__liens a[aria-current='page'] {
   border-bottom-color: white;
+}
+
+.nav__utilisateur {
+  color: white;
+  font-weight: 600;
+}
+
+.nav__deconnexion {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid white;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav__deconnexion:hover {
+  background-color: white;
+  color: var(--seac-green-dark);
+}
+
+.nav__deconnexion:focus-visible {
+  outline: 3px solid var(--seac-orange);
+  outline-offset: 2px;
+}
+
+.nav__deconnexion:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* === MISE EN PAGE === */
@@ -210,6 +241,31 @@ a:focus-visible {
 
 .entete-formulaire p {
   margin: 0;
+}
+
+.authentification {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.authentification .entete-formulaire {
+  text-align: center;
+}
+
+.authentification__formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.authentification__formulaire .champ {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.authentification__lien {
+  margin: 0;
+  text-align: center;
 }
 
 .formulaire__entete {

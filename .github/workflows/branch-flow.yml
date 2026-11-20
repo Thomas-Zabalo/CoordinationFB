@@ -1,0 +1,37 @@
+name: Enforce branch flow (dev → test → main)
+
+on:
+  pull_request:
+    branches:
+      - test
+      - main
+
+jobs:
+  check-source-branch:
+    name: Vérifier la branche source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier l'ordre dev → test → main
+        run: |
+          SOURCE="${{ github.head_ref }}"
+          TARGET="${{ github.base_ref }}"
+
+          echo "📌 PR de '$SOURCE' vers '$TARGET'"
+
+          if [ "$TARGET" = "test" ]; then
+            if [ "$SOURCE" != "dev" ]; then
+              echo "❌ Les merges vers 'test' doivent venir de 'dev', pas de '$SOURCE'."
+              echo "   Flux attendu : feature/* → dev → test → main"
+              exit 1
+            fi
+            echo "✅ Source valide : dev → test"
+          fi
+
+          if [ "$TARGET" = "main" ]; then
+            if [ "$SOURCE" != "test" ]; then
+              echo "❌ Les merges vers 'main' doivent venir de 'test', pas de '$SOURCE'."
+              echo "   Flux attendu : feature/* → dev → test → main"
+              exit 1
+            fi
+            echo "✅ Source valide : test → main"
+          fi

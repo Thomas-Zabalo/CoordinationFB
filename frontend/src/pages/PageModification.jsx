@@ -21,7 +21,7 @@ export default function PageModification() {
 
   if (chargement) {
     return (
-      <p className="text-secondary" role="status" aria-live="polite">
+      <p className="py-8 font-mono text-xs uppercase tracking-widest text-encre-douce" role="status" aria-live="polite">
         Chargement…
       </p>
     );
@@ -29,12 +29,15 @@ export default function PageModification() {
 
   if (erreur || !vinyle) {
     return (
-      <>
+      <div className="mx-auto max-w-xl py-8">
         <MessageErreur erreur={erreur || 'Vinyle introuvable'} />
-        <Link to="/collection" className="lien-retour">
+        <Link
+          to="/collection"
+          className="inline-flex items-center text-sm font-medium text-encre-douce no-underline transition-colors hover:text-terre"
+        >
           ← Retour à ma collection
         </Link>
-      </>
+      </div>
     );
   }
 
@@ -44,13 +47,17 @@ export default function PageModification() {
   }
 
   return (
-    <>
-      <Link to={`/vinyles/${id}`} className="lien-retour">
+    <div className="mx-auto max-w-4xl">
+      <Link
+        to={`/vinyles/${id}`}
+        className="mb-5 inline-flex items-center text-sm font-medium text-encre-douce no-underline transition-colors hover:text-terre"
+      >
         ← Retour à la fiche
       </Link>
-      <header className="entete-formulaire">
-        <h1>Modifier un vinyle</h1>
-        <p className="text-secondary">
+      <header className="mb-6">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-terre">Édition du pressage</p>
+        <h1 className="mt-1.5 font-serif text-3xl font-bold text-encre sm:text-4xl">Modifier un vinyle</h1>
+        <p className="mt-2 text-sm text-encre-douce">
           {vinyle.artiste} — {vinyle.titre}
         </p>
       </header>
@@ -63,6 +70,6 @@ export default function PageModification() {
         onEnregistrer={enregistrer}
         onAnnuler={() => naviguer(`/vinyles/${id}`)}
       />
-    </>
+    </div>
   );
 }

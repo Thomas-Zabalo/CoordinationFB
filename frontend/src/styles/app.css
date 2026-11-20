@@ -176,6 +176,65 @@ a:focus-visible {
   font-size: 0.875rem;
 }
 
+.champ__obligatoire {
+  color: var(--erreur);
+  font-weight: 700;
+}
+
+.champ__pied {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+}
+
+.champ__compteur {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.champ__compteur--alerte {
+  color: var(--erreur);
+  font-weight: 600;
+}
+
+.entete-formulaire {
+  margin-bottom: var(--spacing-lg);
+}
+
+.entete-formulaire h1 {
+  margin: 0 0 var(--spacing-xs);
+}
+
+.entete-formulaire p {
+  margin: 0;
+}
+
+.formulaire__entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-md);
+}
+
+.formulaire__legende {
+  margin: 0;
+}
+
+.formulaire__statut {
+  display: inline-block;
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background-color: var(--seac-orange);
+  color: #333;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .formulaire fieldset {
   border: none;
   padding: 0;
@@ -213,13 +272,15 @@ a:focus-visible {
 
 .choix-liste__option {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
+  flex: 1 1 220px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .choix-liste__option:has(input:checked) {
@@ -229,7 +290,32 @@ a:focus-visible {
 
 .choix-liste__option input {
   accent-color: var(--seac-green);
-  margin: 0;
+  margin: 3px 0 0;
+}
+
+.choix-liste__texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choix-liste__titre {
+  font-weight: 600;
+}
+
+.choix-liste__description {
+  font-size: 0.825rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.selecteur-etat__apercu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-xs);
+  min-height: 1.75rem;
 }
 
 /* === TABLEAU === */

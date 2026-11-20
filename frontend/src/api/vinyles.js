@@ -1,35 +1,6 @@
-const URL_API = import.meta.env.VITE_API_URL ?? '/api';
+import { ErreurApi, requeteApi } from './requete.js';
 
-export class ErreurApi extends Error {
-  constructor(message, statut, details) {
-    super(message);
-    this.statut = statut;
-    this.details = details ?? {};
-  }
-}
-
-async function requete(chemin, { methode = 'GET', corps, signal } = {}) {
-  let reponse;
-  try {
-    reponse = await fetch(`${URL_API}${chemin}`, {
-      method: methode,
-      headers: corps ? { 'Content-Type': 'application/json' } : undefined,
-      body: corps ? JSON.stringify(corps) : undefined,
-      signal,
-    });
-  } catch (erreur) {
-    if (erreur.name === 'AbortError') throw erreur;
-    throw new ErreurApi("Impossible de joindre le serveur. Vérifiez que l'API est démarrée.", 0);
-  }
-
-  if (reponse.status === 204) return null;
-
-  const donnees = await reponse.json().catch(() => null);
-  if (!reponse.ok) {
-    throw new ErreurApi(donnees?.erreur?.message ?? 'Erreur inattendue', reponse.status, donnees?.erreur?.details);
-  }
-  return donnees;
-}
+export { ErreurApi };
 
 function versParametres(filtres) {
   const parametres = new URLSearchParams();
@@ -41,29 +12,29 @@ function versParametres(filtres) {
 }
 
 export function listerVinyles(filtres = {}, signal) {
-  return requete(`/vinyles${versParametres(filtres)}`, { signal });
+  return requeteApi(`/vinyles${versParametres(filtres)}`, { signal });
 }
 
 export function listerGenres(liste, signal) {
-  return requete(`/vinyles/genres${versParametres({ liste })}`, { signal });
+  return requeteApi(`/vinyles/genres${versParametres({ liste })}`, { signal });
 }
 
 export function recupererVinyle(id, signal) {
-  return requete(`/vinyles/${id}`, { signal });
+  return requeteApi(`/vinyles/${id}`, { signal });
 }
 
 export function creerVinyle(vinyle) {
-  return requete('/vinyles', { methode: 'POST', corps: vinyle });
+  return requeteApi('/vinyles', { methode: 'POST', corps: vinyle });
 }
 
 export function modifierVinyle(id, vinyle) {
-  return requete(`/vinyles/${id}`, { methode: 'PUT', corps: vinyle });
+  return requeteApi(`/vinyles/${id}`, { methode: 'PUT', corps: vinyle });
 }
 
 export function supprimerVinyle(id) {
-  return requete(`/vinyles/${id}`, { methode: 'DELETE' });
+  return requeteApi(`/vinyles/${id}`, { methode: 'DELETE' });
 }
 
 export function declencherErreurApi(statut, signal) {
-  return requete(`/test-erreur/${statut}`, { signal });
+  return requeteApi(`/test-erreur/${statut}`, { signal });
 }

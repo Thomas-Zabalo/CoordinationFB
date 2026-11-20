@@ -35,6 +35,10 @@ export function creerRoutesVinyles(db) {
     res.json(service.transferer(req.params.id, req.body));
   });
 
+  routes.post('/:id/transferer', (req, res) => {
+    res.json(service.transferer(req.params.id, req.body));
+  });
+
   routes.delete('/:id', (req, res) => {
     service.supprimer(req.params.id);
     res.status(204).end();

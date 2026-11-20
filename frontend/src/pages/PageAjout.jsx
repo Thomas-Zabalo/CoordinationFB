@@ -18,13 +18,17 @@ export default function PageAjout() {
   }
 
   return (
-    <>
-      <Link to={infosListe.chemin} className="lien-retour">
+    <div className="mx-auto max-w-4xl">
+      <Link
+        to={infosListe.chemin}
+        className="mb-5 inline-flex items-center text-sm font-medium text-encre-douce no-underline transition-colors hover:text-terre"
+      >
         ← {infosListe.titre}
       </Link>
-      <header className="entete-formulaire">
-        <h1>Ajouter un vinyle</h1>
-        <p className="text-secondary">
+      <header className="mb-6">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-terre">Nouveau pressage</p>
+        <h1 className="mt-1.5 font-serif text-3xl font-bold text-encre sm:text-4xl">Ajouter un vinyle</h1>
+        <p className="mt-2 text-sm text-encre-douce">
           Renseignez les informations du pressage pour l’ajouter à {infosListe.nomPossessif}.
         </p>
       </header>
@@ -35,6 +39,6 @@ export default function PageAjout() {
         onEnregistrer={enregistrer}
         onAnnuler={() => naviguer(infosListe.chemin)}
       />
-    </>
+    </div>
   );
 }

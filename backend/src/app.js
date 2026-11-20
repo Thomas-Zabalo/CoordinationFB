@@ -1,7 +1,8 @@
 import cors from 'cors';
 import express from 'express';
 import { creerRoutesAuth } from './auth/routes.js';
-import { ErreurApi, erreurInterdit, erreurIntrouvable, gestionnaireErreurs, routeIntrouvable } from './erreurs.js';
+import { creerRoutesSwagger } from './docs/routes.js';
+import { ErreurApi, gestionnaireErreurs, routeIntrouvable } from './erreurs.js';
 import { enTetesSecurite, limiteurRequetes, validerContentType, verifierOrigineCors } from './securite.js';
 import { creerRoutesVinyles } from './vinyles/routes.js';
 
@@ -29,11 +30,10 @@ export function creerApp({
   });
   routesApi.get('/test-erreur/:statut', (req, res, next) => {
     const statut = Number(req.params.statut);
-    if (statut === 403) return next(erreurInterdit('Accès interdit : permission refusée (simulation backend)'));
-    if (statut === 404) return next(erreurIntrouvable('Ressource de test introuvable (simulation backend 404)'));
     if (statut === 500) return next(new ErreurApi(500, 'Erreur interne du serveur (simulation backend 500)'));
     next(new ErreurApi(statut || 400, `Erreur ${statut || 400} de test générée par le serveur`));
   });
+  routesApi.use(creerRoutesSwagger());
   routesApi.use('/auth', creerRoutesAuth(db, { dureeSessionMs: sessionDureeMs }));
   routesApi.use('/vinyles', creerRoutesVinyles(db));
 

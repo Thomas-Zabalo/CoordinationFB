@@ -22,4 +22,5 @@ const app = creerApp({
 
 app.listen(config.port, () => {
   console.log(`API CoordinationFB démarrée sur http://localhost:${config.port}`);
+  console.log(`Documentation Swagger disponible sur http://localhost:${config.port}/docs`);
 });

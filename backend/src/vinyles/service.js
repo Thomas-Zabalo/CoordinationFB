@@ -3,6 +3,7 @@ import {
   validerIdentifiant,
   validerModificationPartielle,
   validerRecherche,
+  validerTransfert,
   validerVinyle,
 } from './validation.js';
 
@@ -52,6 +53,15 @@ export function creerServiceVinyles(depot) {
       const { valeurs, erreurs } = validerModificationPartielle(corps);
       if (erreurs) throw erreurValidation(erreurs);
       const vinyle = depot.modifierPartiellement(id, valeurs);
+      if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
+      return vinyle;
+    },
+
+    transferer(idBrut, corps) {
+      const id = lireIdentifiant(idBrut);
+      const { valeurs, erreurs } = validerTransfert(corps);
+      if (erreurs) throw erreurValidation(erreurs);
+      const vinyle = depot.transfererVersCollection(id, valeurs);
       if (!vinyle) throw erreurIntrouvable('Vinyle introuvable');
       return vinyle;
     },

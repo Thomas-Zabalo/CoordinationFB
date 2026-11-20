@@ -149,7 +149,8 @@ export function creerDepotVinyles(db, { maxVinyles = MAX_VINYLES } = {}) {
       );
       const { changes } = requete.run({ ...parametres, id });
       return changes > 0 ? this.trouver(id) : null;
-      
+    },
+
     transfererVersCollection(id, complements = {}) {
       // Transaction pour vérifier l'état courant et basculer la liste sans doublon ni perte de champs.
       const executer = db.transaction(() => {

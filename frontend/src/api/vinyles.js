@@ -38,7 +38,3 @@ export function supprimerVinyle(id) {
 export function declencherErreurApi(statut, signal) {
   return requeteApi(`/test-erreur/${statut}`, { signal });
 }
-
-export function declencherErreurApi(statut, signal) {
-  return requete(`/test-erreur/${statut}`, { signal });
-}
